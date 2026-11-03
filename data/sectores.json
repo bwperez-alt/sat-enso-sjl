@@ -1,14 +1,206 @@
 [
-  {"id": "jic", "nombre": "Jicamarca – Alto Canto Grande", "lat": -11.895, "lon": -76.952, "tipo": "quebrada", "susceptibilidad": 0.92, "vulnerabilidad": 0.82, "nota": "Cabecera de la quebrada Canto Grande; viviendas en el cauce y conos de deyección."},
-  {"id": "mca", "nombre": "Mariscal Cáceres", "lat": -11.925, "lon": -76.966, "tipo": "ladera", "susceptibilidad": 0.82, "vulnerabilidad": 0.80, "nota": "Asentamientos en laderas empinadas con material suelto y muros pirca."},
-  {"id": "mon", "nombre": "Montenegro", "lat": -11.937, "lon": -76.998, "tipo": "ladera", "susceptibilidad": 0.72, "vulnerabilidad": 0.76, "nota": "Laderas del flanco oeste; caída de rocas y flujos menores."},
-  {"id": "bay", "nombre": "Bayóvar", "lat": -11.951, "lon": -76.987, "tipo": "ladera", "susceptibilidad": 0.74, "vulnerabilidad": 0.74, "nota": "Expansión urbana sobre pendientes; drenaje pluvial limitado."},
-  {"id": "hua", "nombre": "Huáscar – Cruz de Motupe", "lat": -11.957, "lon": -76.965, "tipo": "ladera", "susceptibilidad": 0.70, "vulnerabilidad": 0.72, "nota": "Laderas del flanco este con viviendas autoconstruidas."},
-  {"id": "jp2", "nombre": "Juan Pablo II – ladera oeste", "lat": -11.965, "lon": -77.016, "tipo": "ladera", "susceptibilidad": 0.66, "vulnerabilidad": 0.70, "nota": "Quebradas secundarias del flanco oeste hacia el valle."},
-  {"id": "cgm", "nombre": "Canto Grande – cauce medio", "lat": -11.975, "lon": -76.988, "tipo": "quebrada", "susceptibilidad": 0.76, "vulnerabilidad": 0.64, "nota": "Tramo urbano del cauce; el flujo puede encauzarse por avenidas."},
-  {"id": "dco", "nombre": "10 de Octubre – San Hilarión", "lat": -11.985, "lon": -76.972, "tipo": "ladera", "susceptibilidad": 0.60, "vulnerabilidad": 0.60, "nota": "Laderas medias con vías empinadas que conducen escorrentía."},
-  {"id": "man", "nombre": "Mangomarca", "lat": -12.003, "lon": -76.983, "tipo": "ladera", "susceptibilidad": 0.56, "vulnerabilidad": 0.56, "nota": "Cerros del sector sur; riesgo moderado de deslizamientos."},
-  {"id": "cam", "nombre": "Campoy – ribera del Rímac", "lat": -12.016, "lon": -76.964, "tipo": "ribera", "susceptibilidad": 0.72, "vulnerabilidad": 0.66, "nota": "Margen derecha del Rímac; recibe el aporte de la quebrada Huaycoloro aguas arriba."},
-  {"id": "zar", "nombre": "Zárate – ribera del Rímac", "lat": -12.025, "lon": -76.998, "tipo": "ribera", "susceptibilidad": 0.62, "vulnerabilidad": 0.52, "nota": "Ribera urbana; erosión de márgenes y desborde en caudales altos."},
-  {"id": "caj", "nombre": "Caja de Agua – Chacarilla de Otero", "lat": -12.021, "lon": -77.016, "tipo": "ladera", "susceptibilidad": 0.50, "vulnerabilidad": 0.55, "nota": "Laderas del extremo suroeste del distrito."}
+ {
+  "id": "jic",
+  "nombre": "Jicamarca – Alto Canto Grande",
+  "lat": -11.895,
+  "lon": -76.952,
+  "tipo": "quebrada",
+  "susceptibilidad": 0.92,
+  "vulnerabilidad": 0.82,
+  "nota": "Cabecera de la quebrada Canto Grande; zona con límites en controversia con Huarochirí. Viviendas en el cauce y en conos de deyección.",
+  "ambito": "influencia",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "mca",
+  "nombre": "Mariscal Cáceres",
+  "lat": -11.925,
+  "lon": -76.966,
+  "tipo": "ladera",
+  "susceptibilidad": 0.82,
+  "vulnerabilidad": 0.8,
+  "nota": "Asentamientos en laderas empinadas con material suelto y muros de pirca.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "mon",
+  "nombre": "Montenegro",
+  "lat": -11.937,
+  "lon": -76.998,
+  "tipo": "ladera",
+  "susceptibilidad": 0.72,
+  "vulnerabilidad": 0.76,
+  "nota": "Laderas del flanco oeste; caídas de rocas y flujos menores.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "bay",
+  "nombre": "Bayóvar",
+  "lat": -11.951,
+  "lon": -76.987,
+  "tipo": "ladera",
+  "susceptibilidad": 0.74,
+  "vulnerabilidad": 0.74,
+  "nota": "Expansión urbana sobre pendientes; drenaje pluvial limitado.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "hua",
+  "nombre": "Huáscar – Cruz de Motupe",
+  "lat": -11.957,
+  "lon": -76.965,
+  "tipo": "ladera",
+  "susceptibilidad": 0.7,
+  "vulnerabilidad": 0.72,
+  "nota": "Laderas del flanco este con viviendas autoconstruidas.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "jp2",
+  "nombre": "Juan Pablo II – ladera oeste",
+  "lat": -11.965,
+  "lon": -77.016,
+  "tipo": "ladera",
+  "susceptibilidad": 0.66,
+  "vulnerabilidad": 0.7,
+  "nota": "Quebradas secundarias del flanco oeste hacia el valle.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "cgm",
+  "nombre": "Canto Grande – cauce medio",
+  "lat": -11.975,
+  "lon": -76.988,
+  "tipo": "quebrada",
+  "susceptibilidad": 0.76,
+  "vulnerabilidad": 0.64,
+  "nota": "Tramo urbano del cauce; el flujo puede encauzarse por avenidas.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "dco",
+  "nombre": "10 de Octubre – San Hilarión",
+  "lat": -11.985,
+  "lon": -76.972,
+  "tipo": "ladera",
+  "susceptibilidad": 0.6,
+  "vulnerabilidad": 0.6,
+  "nota": "Laderas medias con vías empinadas que conducen escorrentía.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "man",
+  "nombre": "Mangomarca",
+  "lat": -12.003,
+  "lon": -76.983,
+  "tipo": "ladera",
+  "susceptibilidad": 0.56,
+  "vulnerabilidad": 0.56,
+  "nota": "Cerros del sector sur; susceptibles a caídas de rocas y derrumbes.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "cam",
+  "nombre": "Campoy – ribera del Rímac",
+  "lat": -12.016,
+  "lon": -76.964,
+  "tipo": "ribera",
+  "susceptibilidad": 0.72,
+  "vulnerabilidad": 0.66,
+  "nota": "Margen derecha del Rímac; recibe el aporte de la quebrada Huaycoloro aguas arriba.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "zar",
+  "nombre": "Zárate – ribera del Rímac",
+  "lat": -12.025,
+  "lon": -76.998,
+  "tipo": "ribera",
+  "susceptibilidad": 0.62,
+  "vulnerabilidad": 0.52,
+  "nota": "Ribera urbana; erosión de márgenes y desborde en caudales altos.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ },
+ {
+  "id": "caj",
+  "nombre": "Caja de Agua – Chacarilla de Otero",
+  "lat": -12.021,
+  "lon": -77.016,
+  "tipo": "ladera",
+  "susceptibilidad": 0.5,
+  "vulnerabilidad": 0.55,
+  "nota": "Laderas del extremo suroeste del distrito.",
+  "ambito": "distrito",
+  "elementos_expuestos": {
+   "poblacion": null,
+   "viviendas": null,
+   "establecimientos_salud": null,
+   "instituciones_educativas": null
+  }
+ }
 ]

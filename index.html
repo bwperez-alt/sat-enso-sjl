@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SAT ENSO – Huaicos, Deslizamientos e Inundación · San Juan de Lurigancho</title>
+<title>SAT ante Huaicos, Movimientos en Masa e Inundaciones (El Niño Costero) · San Juan de Lurigancho</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
@@ -12,7 +12,7 @@
 :root{
   --bg:#0f1720; --panel:#151f2b; --panel2:#1b2735; --line:#2a3a4d; --grid:#25313f;
   --t1:#eef2f6; --t2:#b6c2cf; --t3:#7f8fa1; --accent:#4ea1ff; --proj:#7d8fa6;
-  --bajo:#0ca30c; --amarilla:#fab219; --medio:#ec835a; --alto:#d03b3b; --critico:#8e1b3a;
+  --amarilla:#fab219; --alto:#d03b3b;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--t1);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px}
@@ -95,6 +95,12 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{stroke-opacity:.15;stroke-width:4}50%{stroke-opacity:.6;stroke-width:14}}
 @media (max-width:1150px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
 @media (max-width:760px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}.kpis{grid-template-columns:repeat(2,1fr)}#map{height:420px}}
+
+.presets button.sel{border-color:var(--accent);color:var(--t1);background:#1f3047}
+.strip{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 2px}
+.strip .cell{min-width:64px;flex:1;border-radius:6px;padding:4px 6px;font-size:11px;line-height:1.25;display:flex;flex-direction:column}
+.strip .cell span{opacity:.9}
+.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
 </style>
 </head>
 <body>
@@ -102,47 +108,50 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
 <aside>
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3 L31 29 H3 Z" fill="none" stroke="#fab219" stroke-width="2.4" stroke-linejoin="round"/><path d="M8 24 q4.5-4 9 0 t9 0" fill="none" stroke="#4ea1ff" stroke-width="2.2" stroke-linecap="round"/><circle cx="17" cy="14" r="2" fill="#fab219"/></svg>
-    <h1>Sistema de Alerta Temprana de Huaicos, Deslizamientos e Inundación (ENSO) — San Juan de Lurigancho</h1>
-  </div>
-
-  <div>
-    <h2>Filtros por fechas</h2>
-    <label for="d0">Fecha inicial</label>
-    <input type="date" id="d0">
-    <label for="d1">Fecha de proyección</label>
-    <input type="date" id="d1">
-    <div class="presets">
-      <button data-p="7">7 días</button>
-      <button data-p="16">16 días (pronóstico)</button>
-      <button data-p="temp">Temporada de lluvias</button>
-    </div>
-  </div>
-
-  <div>
-    <h2>Escenario ENSO (ENFEN)</h2>
-    <select id="enso" aria-label="Estado del sistema de alerta ENFEN"></select>
-    <div class="muted" id="icenTxt" style="margin-top:6px"></div>
+    <h1>Sistema de Alerta Temprana ante Huaicos, Movimientos en Masa e Inundaciones asociados a El Niño Costero — San Juan de Lurigancho</h1>
   </div>
 
   <div>
     <h2>Modo de cálculo</h2>
     <div class="toggle">
-      <button id="mProy" class="on">Pronóstico + proyección</button>
-      <button id="mEvt">Simular evento</button>
+      <button id="mProy" class="on">Pronóstico</button>
+      <button id="mEvt">Escenario hipotético</button>
+    </div>
+    <div id="horBox">
+      <label>Horizonte de pronóstico</label>
+      <div class="presets">
+        <button data-h="3">3 días</button>
+        <button data-h="7" class="sel">7 días</button>
+        <button data-h="16">16 días</button>
+      </div>
+      <div class="muted" style="margin-top:6px">Más allá de 16 días no existe pronóstico diario confiable; vea la perspectiva estacional.</div>
     </div>
     <div id="evtBox" style="display:none">
-      <label for="r24">Lluvia 24 h en cabeceras de quebrada <span class="val" id="r24v"></span></label>
-      <input type="range" id="r24" min="0" max="60" step="1" value="18">
-      <label for="r72">Lluvia acumulada 72 h <span class="val" id="r72v"></span></label>
-      <input type="range" id="r72" min="0" max="120" step="1" value="35">
-      <label for="q">Caudal del Rímac en Chosica <span class="val" id="qv"></span></label>
-      <input type="range" id="q" min="10" max="250" step="5" value="95">
+      <div class="presets" style="margin-top:4px">
+        <button data-e="1">Detonante moderado</button>
+        <button data-e="2">Fuerte</button>
+        <button data-e="3">Extremo</button>
+      </div>
+      <label for="i1">Intensidad máxima en 1 h <span class="val" id="i1v"></span></label>
+      <input type="range" id="i1" min="0" max="25" step="0.5" value="4">
+      <label for="r24">Precipitación acumulada en 24 h <span class="val" id="r24v"></span></label>
+      <input type="range" id="r24" min="0" max="60" step="1" value="10">
+      <label for="r72">Precipitación acumulada en 72 h <span class="val" id="r72v"></span></label>
+      <input type="range" id="r72" min="0" max="100" step="1" value="18">
+      <label for="q">Caudal en la estación Chosica <span class="val" id="qv"></span></label>
+      <input type="range" id="q" min="10" max="250" step="5" value="60">
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="sat"> Suelo húmedo por lluvia antecedente</label>
     </div>
   </div>
 
   <div>
-    <div class="row"><label for="minR" style="margin:0">Índice de riesgo mínimo</label><span class="val" id="minRv"></span></div>
-    <input type="range" id="minR" min="0" max="0.8" step="0.05" value="0">
+    <h2>Filtro de visualización</h2>
+    <select id="minA" aria-label="Mostrar sectores con aviso">
+      <option value="0">Mostrar todos los sectores</option>
+      <option value="1">Solo con aviso amarillo o superior</option>
+      <option value="2">Solo con aviso naranja o superior</option>
+      <option value="3">Solo con aviso rojo</option>
+    </select>
   </div>
 
   <div class="box">
@@ -160,7 +169,7 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
   </div>
 
   <div class="box">
-    <div class="row" style="margin-bottom:6px"><h2 style="margin:0">Estado ENSO</h2><span class="live" id="liveTag"><i></i>en vivo</span></div>
+    <h2 style="margin-bottom:6px">El Niño Costero</h2>
     <div id="ensoBox"></div>
   </div>
 
@@ -170,15 +179,15 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
   </div>
 
   <div class="box disc">
-    <p class="muted" style="margin:0"><b style="color:var(--t1)">Importante:</b> herramienta <b style="color:var(--t1)">indicativa y educativa</b>. No sustituye los avisos del SENAMHI, los comunicados del ENFEN ni las alertas del INDECI, CENEPRED o la Municipalidad de SJL.</p>
+    <p class="muted" style="margin:0"><b style="color:var(--t1)">Importante:</b> herramienta <b style="color:var(--t1)">indicativa y educativa</b>. Los avisos que muestra no son oficiales. Siga siempre los avisos del SENAMHI, los comunicados del ENFEN y las indicaciones del INDECI y de la Municipalidad de San Juan de Lurigancho.</p>
   </div>
 </aside>
 
 <main>
   <div class="top">
     <div>
-      <h2 style="margin:0">Monitoreo ENSO · Lima Este</h2>
-      <p>El mapa y los gráficos muestran, para cada sector de quebrada, ladera o ribera, el <b>peor escenario</b> (mayor riesgo) dentro de las fechas elegidas. Los primeros días usan el <b>pronóstico real</b> de lluvia y caudal; más allá, una <b>proyección estacional</b> ajustada por El Niño costero.</p>
+      <h2 style="margin:0">Pronóstico y escenarios de riesgo · Lima Este</h2>
+      <p>Para cada sector se combina el <b>nivel de riesgo de referencia</b> (peligro × vulnerabilidad) con la <b>intensidad del detonante pronosticado</b> (precipitación en las cabeceras de quebrada y caudal del Rímac) para obtener un <b>aviso indicativo</b>: sin aviso, amarillo, naranja o rojo.</p>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
       <div class="chip" id="rangeChip"></div>
@@ -186,25 +195,27 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
     </div>
   </div>
 
+  <div id="banner" class="box" style="display:none;border-left:3px solid var(--amarilla)"></div>
+
   <div class="kpis" id="kpis"></div>
 
   <div class="grid2">
     <div class="card">
       <div class="maphead">
-        <h2 style="margin:0">Mapa de alerta por sector</h2>
-        <input type="search" id="buscar" list="sectList" placeholder="🔍 Buscar sector (ej. Bayóvar)" aria-label="Buscar sector">
+        <h2 style="margin:0">Mapa de avisos por sector</h2>
+        <input type="search" id="buscar" list="sectList" placeholder="🔍 Buscar sector (p. ej., Bayóvar)" aria-label="Buscar sector">
         <datalist id="sectList"></datalist>
       </div>
-      <div id="map" role="region" aria-label="Mapa de San Juan de Lurigancho con sectores coloreados por nivel de riesgo"></div>
+      <div id="map" role="region" aria-label="Mapa de San Juan de Lurigancho con sectores coloreados por aviso indicativo"></div>
       <div class="legend" id="legend"></div>
-      <div class="muted" style="margin-top:6px">Ubicación de sectores aproximada y referencial. Cambie el mapa base (satélite, topográfico, calles) con el botón de capas.</div>
+      <div class="muted" style="margin-top:6px">Color = aviso indicativo. Tamaño del círculo = nivel de riesgo de referencia. Ubicación de sectores aproximada. Cambie el mapa base con el botón de capas.</div>
     </div>
     <div class="card">
-      <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Ranking de sectores</h2>
+      <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Sectores</h2>
         <span><button class="btn" id="csvBtn">⬇ Descargar CSV</button> <button class="btn" id="copyBtn">Copiar</button></span></div>
-      <div class="muted" id="csvMsg" style="min-height:0"></div>
+      <div class="muted" id="csvMsg"></div>
       <table>
-        <thead><tr><th>Sector</th><th>Tipo</th><th class="num">Riesgo</th><th>Nivel</th><th>Fecha pico</th></tr></thead>
+        <thead><tr><th>Sector</th><th>Tipo</th><th>Riesgo de referencia</th><th>Aviso máximo</th><th>Fecha</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -220,27 +231,48 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
     </div>
     <div class="chips" id="dChips"></div>
     <div class="muted" id="dNote" style="margin-bottom:8px"></div>
-    <div class="legend" style="margin:0 0 6px"><span><span class="swatch" style="background:var(--accent)"></span>Pronóstico real</span><span><span class="swatch" style="background:var(--proj)"></span>Proyección estacional</span></div>
+    <div id="strip" class="strip"></div>
+    <div class="legend" style="margin:6px 0"><span><span class="swatch" style="background:var(--proj)"></span>Últimos días (análisis del modelo)</span><span><span class="swatch" style="background:var(--accent)"></span>Pronóstico</span><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#b6c2cf" stroke-dasharray="3 3"/></svg>Ahora</span></div>
     <div class="grid2" style="gap:12px;grid-template-columns:1fr 1fr">
-      <div><div class="muted" style="margin-bottom:2px">Índice de riesgo diario (0–1)</div><svg class="chart" id="cRisk" viewBox="0 0 520 210"></svg></div>
-      <div><div class="muted" style="margin-bottom:2px">Lluvia 24 h en cabeceras de quebrada (mm)</div><svg class="chart" id="cRain" viewBox="0 0 520 210"></svg></div>
+      <div><div class="muted" style="margin-bottom:2px">Precipitación horaria en cabeceras de quebrada (mm/h)</div><svg class="chart" id="cA" viewBox="0 0 520 210"></svg></div>
+      <div><div class="muted" style="margin-bottom:2px" id="cBtitle"></div><svg class="chart" id="cB" viewBox="0 0 520 210"></svg></div>
+    </div>
+    <div class="muted" id="ctxTxt" style="margin-top:6px"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Perspectiva estacional</h2>
+      <div id="seasonBox" class="muted" style="font-size:13px;line-height:1.55"></div>
+    </div>
+    <div class="card">
+      <h2>¿Qué hacer ante un aviso?</h2>
+      <ul class="muted" style="font-size:13px;line-height:1.55;margin:0;padding-left:18px">
+        <li><b style="color:var(--t1)">Amarillo:</b> manténgase informado por el SENAMHI y la Municipalidad; revise su mochila de emergencia y su ruta de evacuación.</li>
+        <li><b style="color:var(--t1)">Naranja:</b> evite los cauces y las vías de quebrada; prepare la evacuación de personas vulnerables; coordine con su junta vecinal.</li>
+        <li><b style="color:var(--t1)">Rojo:</b> aléjese de cauces y laderas inestables; diríjase a zonas seguras y siga las indicaciones de las autoridades.</li>
+      </ul>
+      <p class="muted" style="margin:8px 0 0">Emergencias: Policía <b style="color:var(--t1)">105</b> · Bomberos <b style="color:var(--t1)">116</b> · SAMU <b style="color:var(--t1)">106</b> · <a href="https://www.senamhi.gob.pe/?&p=aviso-meteorologico" target="_blank" rel="noopener">Avisos SENAMHI</a></p>
     </div>
   </div>
 
   <div class="card">
     <details>
       <summary>Metodología, fuentes y limitaciones</summary>
-      <p><b>Riesgo = Peligro × Vulnerabilidad</b>, siguiendo el enfoque del CENEPRED. Para cada día:</p>
+      <p><b>1. Nivel de riesgo de referencia (estático).</b> Siguiendo el enfoque del CENEPRED (riesgo = peligro × vulnerabilidad), cada sector tiene un índice de susceptibilidad y uno de vulnerabilidad entre 0 y 1. Su producto se clasifica en cuatro niveles: <b>Bajo</b> (&lt; 0,30), <b>Medio</b> (0,30–0,45), <b>Alto</b> (0,45–0,62) y <b>Muy alto</b> (≥ 0,62). <b>Los valores actuales son ilustrativos</b> y deben reemplazarse por la susceptibilidad del INGEMMET o del CENEPRED y por una vulnerabilidad calculada con exposición, fragilidad y resiliencia (dimensiones social, económica y ambiental).</p>
+      <p><b>2. Intensidad del detonante (dinámica, por día).</b> Se compara la precipitación en las cabeceras de las quebradas Canto Grande y Huaycoloro con tres umbrales (U1, U2, U3), conceptualmente equivalentes a los percentiles P90, P95 y P99 del SENAMHI:</p>
       <ul>
-        <li><b>Detonante por lluvia</b> (Hr) = 0,6·(R24−4)/26 + 0,4·(R72−10)/50, acotado entre 0 y 1. R24 y R72 son la lluvia de 24 h y la acumulada de 72 h en las <b>cabeceras de las quebradas</b> Canto Grande (Jicamarca alto) y Huaycoloro; se toma el mayor de los dos puntos.</li>
-        <li><b>Detonante fluvial</b> (Hq) = (Q−50)/110, acotado entre 0 y 1. Q es el caudal del Rímac en Chosica: pronóstico GloFAS (Copernicus) cuando está disponible; si no, se estima con la climatología mensual más la lluvia de 72 h de la cuenca alta (Matucana, San Mateo, Carampoma).</li>
-        <li><b>Peligro del sector</b> = susceptibilidad × mezcla según tipo: <i>quebrada</i> 75 % lluvia + 25 % caudal · <i>ladera</i> 100 % lluvia · <i>ribera</i> 30 % lluvia + 70 % caudal.</li>
-        <li><b>Riesgo</b> = peligro × (0,5 + 0,5 × vulnerabilidad) × 1,25, acotado entre 0 y 1. Niveles: Bajo &lt; 0,20 · Alerta amarilla 0,20–0,40 · Medio 0,40–0,60 · Alto 0,60–0,80 · Crítico ≥ 0,80.</li>
-        <li><b>Pronóstico real</b> (hasta 16 días): modelos meteorológicos vía Open-Meteo; ya incorporan el estado actual del océano, por eso no se les aplica el factor ENSO.</li>
-        <li><b>Proyección estacional</b> (después del día 16): climatología mensual referencial × factor según el escenario ENFEN, con variación diaria reproducible. <b>No es un pronóstico</b>; sirve para comparar escenarios.</li>
+        <li>Intensidad máxima en 1 h, acumulado en 24 h y acumulado en 72 h; se toma el nivel más alto.</li>
+        <li>Si el índice de precipitación antecedente (IPA = Σ kⁱ·Pᵢ, k = 0,85, siete días previos a la ventana de 24 h) supera el umbral de saturación, los umbrales de 24 h se reducen un 20 %.</li>
+        <li>En sectores de ribera se usa además el caudal diario del Rímac en Chosica (pronóstico GloFAS).</li>
       </ul>
-      <p><b>Limitaciones:</b> umbrales, susceptibilidad y vulnerabilidad son referenciales y deben calibrarse con el registro de emergencias (INDECI–SINPAD) de 2017 y 2023, las zonas críticas del INGEMMET y los escenarios del CENEPRED–SIGRID. Los modelos globales tienen resolución gruesa y pueden subestimar lluvias convectivas locales. La ubicación de los sectores es aproximada.</p>
-      <p><b>Fuentes:</b> Open-Meteo (pronóstico de lluvia) · GloFAS / Copernicus vía Open-Meteo (caudal) · NOAA CPC (índice RONI/ONI) · ENFEN (estado del sistema de alerta) · OpenStreetMap (límite distrital y mapa de calles) · Esri World Imagery (imagen satelital) · OpenTopoMap (topografía).</p>
+      <p><b>3. Aviso indicativo (matriz basada en impacto).</b></p>
+      <table style="max-width:560px;font-size:12px">
+        <thead><tr><th>Detonante \ Riesgo</th><th>Bajo</th><th>Medio</th><th>Alto</th><th>Muy alto</th></tr></thead>
+        <tbody id="mtx"></tbody>
+      </table>
+      <p><b>Limitaciones.</b> Los umbrales son referenciales y deben calibrarse con el estudio del SENAMHI de umbrales de precipitación de la cuenca del Rímac, los umbrales hidrológicos oficiales de la estación Chosica y los eventos registrados por el INDECI (SINPAD) y el INGEMMET. Los modelos meteorológicos globales tienen resolución gruesa y pueden subestimar tormentas locales de corta duración, que son las que desencadenan huaicos en quebradas pequeñas. Los últimos 7 días corresponden al análisis del modelo, no a observaciones de estaciones. La humedad relativa, la temperatura y la humedad del suelo se muestran solo como contexto y no intervienen en el cálculo.</p>
+      <p><b>Fuentes:</b> Open-Meteo (precipitación horaria, humedad, temperatura, humedad del suelo) · GloFAS / Copernicus vía Open-Meteo (caudal) · ENFEN e IGP (ICEN) · NOAA CPC (RONI/ONI) · OpenStreetMap (límite distrital) · Esri World Imagery · OpenTopoMap.</p>
       <p class="muted">Adaptación metodológica inspirada en el Sistema de Alerta Temprana y Riesgo de Inundación (ENSO) Costa Ecuatoriana de Raúl Acevedo.</p>
     </details>
   </div>
@@ -255,128 +287,107 @@ var DATA = /*__DATA__*/null;
 (function(){
 "use strict";
 var $=function(id){return document.getElementById(id);};
-// ---------------- Datos base (respaldo si no hay servidor) ----------------
-var FALLBACK_SECT=[
- {id:"jic",nombre:"Jicamarca – Alto Canto Grande",lat:-11.895,lon:-76.952,tipo:"quebrada",susceptibilidad:0.92,vulnerabilidad:0.82,nota:"Cabecera de la quebrada Canto Grande."},
- {id:"cam",nombre:"Campoy – ribera del Rímac",lat:-12.016,lon:-76.964,tipo:"ribera",susceptibilidad:0.72,vulnerabilidad:0.66,nota:"Margen derecha del Rímac."}
-];
-var FALLBACK_LIM={type:"Polygon",coordinates:[[[-76.93137,-11.94217],[-76.9694,-11.99493],[-76.95311,-12.02226],[-77.00954,-12.03087],[-77.01261,-12.03732],[-77.03065,-11.99639],[-77.02828,-11.96068],[-76.98795,-11.89715],[-76.94228,-11.86087],[-76.91211,-11.88927],[-76.93137,-11.94217]]]};
 var D=DATA||{};
-var SECT=(D.sectores||FALLBACK_SECT);
-var CFG=D.config||{enfen:{estado:"Alerta de El Niño Costero",comunicado:"",fecha:"",resumen:"",url:"https://enfen.imarpe.gob.pe/",escenario_por_defecto:"mod"}};
+var FALLBACK_LIM={type:"Polygon",coordinates:[[[-76.93137,-11.94217],[-76.9694,-11.99493],[-76.95311,-12.02226],[-77.00954,-12.03087],[-77.01261,-12.03732],[-77.03065,-11.99639],[-77.02828,-11.96068],[-76.98795,-11.89715],[-76.94228,-11.86087],[-76.91211,-11.88927],[-76.93137,-11.94217]]]};
+var SECT=D.sectores||[{id:"jic",nombre:"Jicamarca – Alto Canto Grande",lat:-11.895,lon:-76.952,tipo:"quebrada",susceptibilidad:0.92,vulnerabilidad:0.82,ambito:"influencia",nota:""}];
+var CFG=D.config||{};
+var U=CFG.umbrales||{precipitacion_1h_mm:[3,6,10],precipitacion_24h_mm:[8,15,25],precipitacion_72h_mm:[15,25,40],ipa_k:0.85,ipa_saturacion_mm:10,reduccion_umbral_24h_por_ipa:0.8,caudal_chosica_m3s:[70,100,140]};
+var CORTES=(CFG.riesgo&&CFG.riesgo.cortes)||[0.30,0.45,0.62];
 var TIPOS={quebrada:"Quebrada",ladera:"Ladera",ribera:"Ribera"};
 var CANTO=[[-76.948,-11.872],[-76.957,-11.905],[-76.968,-11.93],[-76.982,-11.955],[-76.99,-11.98],[-76.995,-12.005],[-77.0,-12.028]];
 var HUAYCO=[[-76.86,-11.90],[-76.895,-11.94],[-76.915,-11.98],[-76.93,-12.0],[-76.94,-12.016]];
-var ENSO=[
- {k:"nina",n:"La Niña costera",f:0.85,icen:"ICEN < −1,0"},
- {k:"na",n:"No activo (condiciones neutras)",f:1.0,icen:"ICEN entre −1,0 y 0,4"},
- {k:"vig",n:"Vigilancia de El Niño costero",f:1.1,icen:"Probabilidad creciente de condiciones cálidas"},
- {k:"deb",n:"Alerta – El Niño costero débil",f:1.25,icen:"ICEN 0,4 a 1,0"},
- {k:"mod",n:"Alerta – El Niño costero moderado",f:1.5,icen:"ICEN 1,0 a 1,7"},
- {k:"fue",n:"Alerta – El Niño costero fuerte",f:1.9,icen:"ICEN 1,7 a 3,0"},
- {k:"ext",n:"Alerta – El Niño costero extraordinario",f:2.6,icen:"ICEN > 3,0 (ej. 1997-98)"}
-];
-var PCLIM=[60,80,75,20,3,0.5,0.3,1,3,8,12,35];
-var QCLIM=[60,85,90,45,25,18,16,15,15,16,20,32];
-var LV=[
- {k:"bajo",n:"Bajo",hex:"#0ca30c",ic:"●",min:0},
- {k:"amarilla",n:"Alerta amarilla",hex:"#fab219",ic:"▲",min:0.2},
- {k:"medio",n:"Medio (deslizamiento)",hex:"#ec835a",ic:"◆",min:0.4},
- {k:"alto",n:"Alto riesgo",hex:"#d03b3b",ic:"■",min:0.6},
- {k:"critico",n:"Crítico",hex:"#8e1b3a",ic:"✖",min:0.8}
-];
-function level(r){for(var i=LV.length-1;i>=0;i--){if(r>=LV[i].min)return LV[i];}return LV[0];}
-function badge(r){var l=level(r);var fg=(l.k==="amarilla")?"#0b0b0b":"#fff";return '<span class="lvl" style="background:'+l.hex+';color:'+fg+'">'+l.ic+' '+l.n+'</span>';}
+
+// ---------- Escalas ----------
+var RIESGO=[{n:"Bajo",bg:"#3d4561",fg:"#e8ecf5",r:7},{n:"Medio",bg:"#5b4fa3",fg:"#fff",r:9},{n:"Alto",bg:"#8455d6",fg:"#fff",r:11.5},{n:"Muy alto",bg:"#c18af7",fg:"#1a0b2e",r:14}];
+var AVISO=[{n:"Sin aviso",hex:"#3f8f5a",fg:"#fff",ic:"●"},{n:"Aviso amarillo",hex:"#fab219",fg:"#0b0b0b",ic:"▲"},{n:"Aviso naranja",hex:"#f07a2b",fg:"#fff",ic:"◆"},{n:"Aviso rojo",hex:"#d03b3b",fg:"#fff",ic:"■"}];
+var DET=["Sin detonante","Moderado (≥ U1)","Fuerte (≥ U2)","Extremo (≥ U3)"];
+var MATRIZ=[[0,0,0,0],[0,0,1,1],[0,1,1,2],[1,2,3,3]]; // [detonante][riesgo]
+function nivelRiesgo(s){var v=s.susceptibilidad*s.vulnerabilidad;return v>=CORTES[2]?3:v>=CORTES[1]?2:v>=CORTES[0]?1:0;}
+function nv(x,arr){if(x==null||isNaN(x))return 0;return x>=arr[2]?3:x>=arr[1]?2:x>=arr[0]?1:0;}
+function fN(x,d){return x==null||isNaN(x)?"—":(+x).toFixed(d==null?1:d).replace(".",",");}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function badgeA(a){var l=AVISO[a];return '<span class="lvl" style="background:'+l.hex+';color:'+l.fg+'">'+l.ic+' '+l.n+'</span>';}
+function badgeR(r){var l=RIESGO[r];return '<span class="lvl" style="background:'+l.bg+';color:'+l.fg+'">'+l.n+'</span>';}
+function nombreCorto(s){return s.nombre.split(" – ")[0]+(s.ambito==="influencia"?" *":"");}
 
-// ---------------- Pronóstico real indexado por fecha ----------------
-function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-function parse(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
-var REAL={}; // iso -> {cab, cabPts:{}, alta, altaPts:{}}
-var lluv=D.lluvia||{};
-if(lluv.ok){
-  lluv.fechas.forEach(function(f,i){
-    var o={cabPts:{},altaPts:{},cab:null,alta:null};
-    (lluv.cabeceras||[]).forEach(function(n){var v=lluv.puntos[n][i];if(v!=null){o.cabPts[n]=v;o.cab=Math.max(o.cab==null?0:o.cab,v);}});
-    (lluv.cuenca_alta||[]).forEach(function(n){var v=lluv.puntos[n][i];if(v!=null){o.altaPts[n]=v;o.alta=Math.max(o.alta==null?0:o.alta,v);}});
-    if(o.cab!=null)REAL[f]=o;
-  });
-}
-var QREAL={};var cau=D.caudal||{};
-if(cau.ok){cau.fechas.forEach(function(f,i){if(cau.caudal[i]!=null)QREAL[f]=cau.caudal[i];});}
-var realDates=Object.keys(REAL).sort();
-var lastReal=realDates.length?parse(realDates[realDates.length-1]):null;
+// ---------- Fechas ----------
+function parseD(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+function isoD(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function fmt(d){return d.toLocaleDateString("es-PE",{weekday:"short",day:"2-digit",month:"short"});}
+function fmtS(d){return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short"});}
+var today=D.hoy?parseD(D.hoy):new Date();today.setHours(0,0,0,0);
 
-// ---------------- Estado ----------------
-var today=D.hoy?parse(D.hoy):new Date();today.setHours(0,0,0,0);
-var defEnso=(CFG.enfen&&CFG.enfen.escenario_por_defecto)||"mod";
-var st={mode:"proy",enso:defEnso,sel:SECT[0].id,minR:0};
-function setRange(p){
-  var a=new Date(today),b=new Date(today);
-  if(p==="temp"){b=new Date(today.getMonth()>=4?today.getFullYear()+1:today.getFullYear(),2,31);}
-  else{b.setDate(b.getDate()+(+p)-1);}
-  $("d0").value=iso(a);$("d1").value=iso(b);
-}
-setRange("temp");
-ENSO.forEach(function(e){var o=document.createElement("option");o.value=e.k;o.textContent=e.n;if(e.k===st.enso)o.selected=true;$("enso").appendChild(o);});
-SECT.forEach(function(s){var o=document.createElement("option");o.value=s.nombre;$("sectList").appendChild(o);});
+// ---------- Series horarias ----------
+var H=null; // {t:[Date], key:[iso], pp:[], hr:[], t2:[], suelo:[], nowIdx}
+(function(){
+  var L=D.lluvia;if(!L||!L.ok)return;
+  var cab=L.cabeceras||[];if(!cab.length)return;
+  var n=L.horas.length,pp=[],hr=[],tt=[],so=[],t=[];
+  for(var i=0;i<n;i++){
+    var m=null,shr=0,chr=0,st=0,ct=0,ss=0,cs=0;
+    cab.forEach(function(c){var P=L.puntos[c];if(!P)return;var v=P.pp[i];if(v!=null)m=Math.max(m==null?0:m,v);
+      if(P.hr&&P.hr[i]!=null){shr+=P.hr[i];chr++;}if(P.t&&P.t[i]!=null){st+=P.t[i];ct++;}if(P.suelo&&P.suelo[i]!=null){ss+=P.suelo[i];cs++;}});
+    pp.push(m);hr.push(chr?shr/chr:null);tt.push(ct?st/ct:null);so.push(cs?ss/cs:null);
+    var s=L.horas[i];t.push(new Date(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10),+s.slice(11,13)));
+  }
+  var nowIdx=D.ahora?L.horas.indexOf(D.ahora):-1;
+  if(nowIdx<0){var nowD=new Date();for(var k=0;k<n;k++){if(t[k]<=nowD)nowIdx=k;}}
+  H={t:t,key:L.horas,pp:pp,hr:hr,tt:tt,so:so,nowIdx:nowIdx};
+})();
+var QD={};if(D.caudal&&D.caudal.ok){D.caudal.fechas.forEach(function(f,i){if(D.caudal.caudal[i]!=null)QD[f]=D.caudal.caudal[i];});}
 
-// ---------------- Modelo ----------------
-function hash(n){var x=Math.sin(n*12.9898+78.233)*43758.5453;return x-Math.floor(x);}
-function clamp(x){return Math.max(0,Math.min(1,x));}
-function dayKey(d){return d.getFullYear()*400+d.getMonth()*31+d.getDate();}
-function rainSynth(d,f){
-  var mean=PCLIM[d.getMonth()]/30*f,u=hash(dayKey(d)),g=-Math.log(1-Math.min(u,0.995));
-  var wet=hash(dayKey(d)+7)<(0.35+0.25*(f-1));
-  return wet?mean*Math.min(g,3.2)*1.5:mean*0.15*g;
-}
-function series(d0,d1,f){
-  var out=[],pre=[],preA=[],d=new Date(d0);d.setDate(d.getDate()-2);
-  while(d<=d1){
-    var k=iso(d),real=REAL[k],r,ra,src;
-    if(real){r=real.cab;ra=real.alta!=null?real.alta:real.cab;src="real";}
-    else{r=rainSynth(d,f);ra=r;src="proy";}
-    pre.push(r);preA.push(ra);
-    if(d>=d0){
-      var n=pre.length,r72=pre[n-1]+(pre[n-2]||0)+(pre[n-3]||0),ra72=preA[n-1]+(preA[n-2]||0)+(preA[n-3]||0);
-      var q,qsrc;
-      if(QREAL[k]!=null){q=QREAL[k];qsrc="GloFAS";}
-      else{q=QCLIM[d.getMonth()]*(src==="real"?1:(1+0.6*(f-1)))+1.0*ra72;qsrc="estimado";}
-      out.push({d:new Date(d),r24:r,r72:r72,q:q,src:src,qsrc:qsrc,real:real||null});
-    }
-    d.setDate(d.getDate()+1);
+function rolling(arr,w,i){var s=0,c=0;for(var k=Math.max(0,i-w+1);k<=i;k++){if(arr[k]!=null){s+=arr[k];c++;}}return c?s:null;}
+// Resumen diario desde las series horarias
+function resumenDias(nd){
+  if(!H)return [];
+  var daily={};H.t.forEach(function(d,i){var k=isoD(d);(daily[k]=daily[k]||[]).push(i);});
+  var sumDia=function(k){var a=daily[k];if(!a)return 0;var s=0;a.forEach(function(i){s+=H.pp[i]||0;});return s;};
+  var out=[];
+  for(var j=0;j<nd;j++){
+    var d=new Date(today);d.setDate(d.getDate()+j);var k=isoD(d),idx=daily[k];if(!idx)break;
+    var i1=0,r24=0,r72=0;idx.forEach(function(i){i1=Math.max(i1,H.pp[i]||0);r24=Math.max(r24,rolling(H.pp,24,i)||0);r72=Math.max(r72,rolling(H.pp,72,i)||0);});
+    var ipa=0;for(var b=2;b<=8;b++){var dd=new Date(d);dd.setDate(dd.getDate()-b);ipa+=Math.pow(U.ipa_k,b-1)*sumDia(isoD(dd));} // excluye el día previo, ya incluido en la ventana de 24 h
+    out.push({d:d,k:k,i1:i1,r24:r24,r72:r72,ipa:ipa,q:QD[k]!=null?QD[k]:null});
   }
   return out;
 }
-function hazards(r24,r72,q){return {hr:clamp(0.6*(r24-4)/26+0.4*(r72-10)/50),hq:clamp((q-50)/110)};}
-function risk(s,h){
-  var mix=s.tipo==="quebrada"?0.75*h.hr+0.25*h.hq:(s.tipo==="ladera"?h.hr:0.3*h.hr+0.7*h.hq);
-  return clamp(s.susceptibilidad*mix*(0.5+0.5*s.vulnerabilidad)*1.25);
+function detPluvial(x){
+  var u24=U.precipitacion_24h_mm,sat=x.ipa>=U.ipa_saturacion_mm;
+  if(sat)u24=u24.map(function(v){return v*U.reduccion_umbral_24h_por_ipa;});
+  return Math.max(nv(x.i1,U.precipitacion_1h_mm),nv(x.r24,u24),nv(x.r72,U.precipitacion_72h_mm));
 }
+function detSector(s,x){
+  var p=detPluvial(x);
+  if(s.tipo!=="ribera")return p;
+  var q=x.q!=null?nv(x.q,U.caudal_chosica_m3s):0;
+  return Math.max(q,Math.max(0,p-1));
+}
+
+// ---------- Estado ----------
+var st={mode:"proy",hor:7,sel:SECT[0].id,minA:0};
+SECT.forEach(function(s){var o=document.createElement("option");o.value=s.nombre;$("sectList").appendChild(o);});
+
 function compute(){
-  var e=ENSO.filter(function(x){return x.k===st.enso;})[0];
-  var d0=parse($("d0").value),d1=parse($("d1").value);
-  if(d1<d0){var t=d0;d0=d1;d1=t;}
-  var res={e:e,d0:d0,d1:d1,days:[],sect:{}};
-  if(st.mode==="proy"){res.days=series(d0,d1,e.f);}
+  var res={dias:[],sect:{}};
+  if(st.mode==="proy"){res.dias=resumenDias(st.hor);}
   else{
-    var r24=+$("r24").value,r72=Math.max(+$("r72").value,r24),q=+$("q").value,f=e.f;
-    res.days=[{d:d0,r24:r24*f,r72:r72*f,q:q*(1+0.3*(f-1)),src:"proy",qsrc:"simulado",real:null}];
+    var x={d:today,k:isoD(today),i1:+$("i1").value,r24:+$("r24").value,r72:Math.max(+$("r72").value,+$("r24").value),q:+$("q").value,ipa:$("sat").checked?U.ipa_saturacion_mm+1:0};
+    res.dias=[x];
   }
   SECT.forEach(function(s){
-    var arr=res.days.map(function(x){return risk(s,hazards(x.r24,x.r72,x.q));});
-    var mx=0,mi=0;arr.forEach(function(v,i){if(v>mx){mx=v;mi=i;}});
-    res.sect[s.id]={arr:arr,max:mx,peak:res.days[mi]?res.days[mi].d:d0,peakSrc:res.days[mi]?res.days[mi].src:"proy"};
+    var rl=nivelRiesgo(s),av=[],dt=[];
+    res.dias.forEach(function(x){var d=detSector(s,x);dt.push(d);av.push(MATRIZ[d][rl]);});
+    var mx=0,mi=0;av.forEach(function(v,i){if(v>mx){mx=v;mi=i;}});
+    res.sect[s.id]={rl:rl,av:av,dt:dt,max:mx,fecha:res.dias.length&&mx>0?res.dias[mi].d:null};
   });
-  res.nReal=res.days.filter(function(x){return x.src==="real";}).length;
   return res;
 }
 
-// ---------------- Mapa (Leaflet) ----------------
-var map=null,secLayer=null,ensured=false,firstFit=true;
+// ---------- Mapa ----------
+var map=null,secLayer=null;
 function initMap(){
-  if(typeof L==="undefined"){$("map").innerHTML='<div class="muted" style="padding:20px">No se pudo cargar el mapa (sin conexión a la librería Leaflet).</div>';return;}
-  map=L.map("map",{zoomControl:true,attributionControl:true,preferCanvas:false}).setView([-11.955,-76.985],13);
+  if(typeof L==="undefined"){$("map").innerHTML='<div class="muted" style="padding:20px">No se pudo cargar el mapa.</div>';return;}
+  map=L.map("map",{zoomControl:true}).setView([-11.955,-76.985],13);
   var sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Imagen © Esri, Maxar, Earthstar Geographics"});
   var topo=L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)"});
   var osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"});
@@ -384,184 +395,169 @@ function initMap(){
   var names=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,opacity:.9});
   sat.addTo(map);names.addTo(map);
   var geo=(D.limite&&D.limite.geometria)||FALLBACK_LIM;
-  var lim=L.geoJSON({type:"Feature",geometry:geo},{style:{color:"#ffd45a",weight:3,fill:true,fillColor:"#ffd45a",fillOpacity:.04,dashArray:null},interactive:false}).addTo(map);
+  var lim=L.geoJSON({type:"Feature",geometry:geo},{style:{color:"#ffd45a",weight:3,fillColor:"#ffd45a",fillOpacity:.04},interactive:false}).addTo(map);
   var toLL=function(a){return a.map(function(p){return [p[1],p[0]];});};
-  var qdas=L.layerGroup([
-    L.polyline(toLL(CANTO),{color:"#e6c37a",weight:2,dashArray:"6 5",interactive:false}),
-    L.polyline(toLL(HUAYCO),{color:"#e6c37a",weight:2,dashArray:"6 5",interactive:false})
-  ]);
+  var qdas=L.layerGroup([L.polyline(toLL(CANTO),{color:"#e6c37a",weight:2,dashArray:"6 5",interactive:false}),L.polyline(toLL(HUAYCO),{color:"#e6c37a",weight:2,dashArray:"6 5",interactive:false})]);
   var est=L.layerGroup();
-  ((CFG.cabeceras||[]).concat(CFG.cuenca_alta||[])).forEach(function(p){
-    L.circleMarker([p.lat,p.lon],{radius:5,color:"#cfe3ff",weight:1.5,fillColor:"#4ea1ff",fillOpacity:1}).bindTooltip(esc(p.nombre),{className:"lbl"}).addTo(est);
-  });
-  if(CFG.punto_caudal){var pc=CFG.punto_caudal;L.circleMarker([pc.lat,pc.lon],{radius:6,color:"#fff",weight:1.5,fillColor:"#1b6fd1",fillOpacity:1}).bindTooltip(esc(pc.nombre)+" (caudal)",{className:"lbl"}).addTo(est);}
+  ((CFG.cabeceras||[]).concat(CFG.cuenca_alta||[])).forEach(function(p){L.circleMarker([p.lat,p.lon],{radius:5,color:"#cfe3ff",weight:1.5,fillColor:"#4ea1ff",fillOpacity:1}).bindTooltip(esc(p.nombre),{className:"lbl"}).addTo(est);});
+  if(CFG.punto_caudal){var pc=CFG.punto_caudal;L.circleMarker([pc.lat,pc.lon],{radius:6,color:"#fff",weight:1.5,fillColor:"#1b6fd1",fillOpacity:1}).bindTooltip(esc(pc.nombre),{className:"lbl"}).addTo(est);}
   secLayer=L.layerGroup().addTo(map);
-  L.control.layers(
-    {"Imagen satelital":sat,"Topográfico":topo,"Calles (OSM)":osm,"Oscuro":dark},
-    {"Nombres de lugares":names,"Límite distrital":lim,"Sectores de alerta":secLayer,"Ejes de quebradas (referencial)":qdas,"Puntos de pronóstico":est},
-    {collapsed:true,position:"topright"}).addTo(map);
-  L.control.scale({imperial:false,position:"bottomleft"}).addTo(map);
+  L.control.layers({"Imagen satelital":sat,"Topográfico":topo,"Calles (OSM)":osm,"Oscuro":dark},
+    {"Nombres de lugares":names,"Límite distrital":lim,"Sectores":secLayer,"Ejes de quebradas (referencial)":qdas,"Puntos de pronóstico":est},{collapsed:true}).addTo(map);
+  L.control.scale({imperial:false}).addTo(map);
   try{map.fitBounds(lim.getBounds(),{padding:[16,16]});}catch(e){}
   window.addEventListener("resize",function(){map.invalidateSize();});
 }
 function drawMarkers(res){
-  if(!map)return;
-  secLayer.clearLayers();
-  var order=SECT.slice().sort(function(a,b){return res.sect[a.id].max-res.sect[b.id].max;});
-  order.forEach(function(s){
-    var o=res.sect[s.id],r=o.max,l=level(r),vis=r>=st.minR,sel=s.id===st.sel,rad=8+r*10;
-    if(vis&&r>=0.6)L.circleMarker([s.lat,s.lon],{radius:rad+6,color:l.hex,weight:6,fill:false,interactive:false,className:"pulse"}).addTo(secLayer);
-    var m=L.circleMarker([s.lat,s.lon],{radius:rad,color:sel?"#ffffff":"#0f1720",weight:sel?3:2,fillColor:l.hex,fillOpacity:vis?.95:.18,opacity:vis?1:.3});
-    m.bindTooltip(esc(s.nombre.split(" – ")[0]),{permanent:sel||(vis&&r>=0.6),direction:"right",offset:[rad,0],className:"lbl"});
-    m.on("mouseover",function(ev){showTip(ev.originalEvent,'<b>'+esc(s.nombre)+'</b><br>'+TIPOS[s.tipo]+' · riesgo máx. <b>'+r.toFixed(2)+'</b><br>'+l.n+'<br><span style="color:#7f8fa1">Pico: '+fmt(o.peak)+(o.peakSrc==="real"?" (pronóstico)":" (proyección)")+'</span>');});
-    m.on("mouseout",hideTip);
-    m.on("click",function(){st.sel=s.id;render(false);});
+  if(!map)return;secLayer.clearLayers();
+  SECT.slice().sort(function(a,b){return res.sect[a.id].max-res.sect[b.id].max;}).forEach(function(s){
+    var o=res.sect[s.id],a=AVISO[o.max],vis=o.max>=st.minA,sel=s.id===st.sel,rad=RIESGO[o.rl].r;
+    if(vis&&o.max>=2)L.circleMarker([s.lat,s.lon],{radius:rad+6,color:a.hex,weight:6,fill:false,interactive:false,className:"pulse"}).addTo(secLayer);
+    var m=L.circleMarker([s.lat,s.lon],{radius:rad,color:sel?"#fff":"#0f1720",weight:sel?3:2,fillColor:a.hex,fillOpacity:vis?.95:.15,opacity:vis?1:.3});
+    m.bindTooltip(esc(nombreCorto(s)),{permanent:sel||(vis&&o.max>=2),direction:"right",offset:[rad,0],className:"lbl"});
+    m.on("mouseover",function(ev){showTip(ev.originalEvent,'<b>'+esc(s.nombre)+'</b>'+(s.ambito==="influencia"?' <span style="color:#9aa8b8">(zona de influencia)</span>':'')+'<br>'+TIPOS[s.tipo]+' · riesgo de referencia: <b>'+RIESGO[o.rl].n+'</b><br>'+a.n+(o.fecha?' · '+fmtS(o.fecha):''));});
+    m.on("mouseout",hideTip);m.on("click",function(){st.sel=s.id;render();});
     m.addTo(secLayer);
   });
 }
-function goTo(name){
-  var s=SECT.filter(function(x){return x.nombre.toLowerCase()===name.toLowerCase();})[0]
-     ||SECT.filter(function(x){return x.nombre.toLowerCase().indexOf(name.toLowerCase())>=0;})[0];
-  if(!s)return;
-  st.sel=s.id;render(false);
-  if(map)map.flyTo([s.lat,s.lon],15,{duration:1.2});
+function goTo(q){
+  q=(q||"").toLowerCase().trim();if(!q)return;
+  var s=SECT.filter(function(x){return x.nombre.toLowerCase()===q;})[0]||SECT.filter(function(x){return x.nombre.toLowerCase().indexOf(q)>=0;})[0];
+  if(!s)return;st.sel=s.id;render();if(map)map.flyTo([s.lat,s.lon],15,{duration:1.2});
 }
 
-// ---------------- Gráficos ----------------
-function fmt(d){return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short",year:"numeric"});}
-function fmtS(d){return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short"});}
-function barPath(x,y,w,h){var r=Math.min(3,w/2,h);return "M"+x+","+(y+h)+"V"+(y+r)+"Q"+x+","+y+" "+(x+r)+","+y+"H"+(x+w-r)+"Q"+(x+w)+","+y+" "+(x+w)+","+(y+r)+"V"+(y+h)+"Z";}
-function chart(id,days,vals,opt){
-  var svg=$(id),W2=520,H2=210,m={l:40,r:12,t:10,b:28},iw=W2-m.l-m.r,ih=H2-m.t-m.b;
-  var n=vals.length,ymax=opt.ymax;
+// ---------- Gráficos ----------
+function barPath(x,y,w,h){var r=Math.min(2,w/2,h);return "M"+x+","+(y+h)+"V"+(y+r)+"Q"+x+","+y+" "+(x+r)+","+y+"H"+(x+w-r)+"Q"+(x+w)+","+y+" "+(x+w)+","+(y+r)+"V"+(y+h)+"Z";}
+function chart(id,ts,vals,opt){
+  var svg=$(id),W=520,Hh=210,m={l:40,r:12,t:10,b:28},iw=W-m.l-m.r,ih=Hh-m.t-m.b,n=vals.length;
+  if(!n){svg.innerHTML='<text x="260" y="105" fill="#7f8fa1" font-size="13" text-anchor="middle">Sin datos</text>';return;}
+  var mx=0;vals.forEach(function(v){if(v!=null)mx=Math.max(mx,v);});(opt.refs||[]).forEach(function(r){mx=Math.max(mx,r.v);});
+  var ymax=opt.nice(mx*1.08);
   var X=function(i){return m.l+(n<=1?iw/2:i*iw/(n-1));},Y=function(v){return m.t+ih-Math.min(v,ymax)/ymax*ih;};
   var h="";
-  if(opt.bands)opt.bands.forEach(function(b){h+='<rect x="'+m.l+'" y="'+Y(b.hi)+'" width="'+iw+'" height="'+(Y(b.lo)-Y(b.hi))+'" fill="'+b.c+'" opacity=".08"/>';});
-  // zona de pronóstico real
-  var nr=0;days.forEach(function(x){if(x.src==="real")nr++;});
-  if(nr>0&&n>1&&nr<n){var xe=(X(nr-1)+X(nr))/2;h+='<rect x="'+m.l+'" y="'+m.t+'" width="'+(xe-m.l)+'" height="'+ih+'" fill="#4ea1ff" opacity=".06"/><line x1="'+xe+'" x2="'+xe+'" y1="'+m.t+'" y2="'+(m.t+ih)+'" stroke="#4ea1ff" stroke-opacity=".5" stroke-dasharray="2 3"/><text x="'+(xe-4)+'" y="'+(m.t+11)+'" fill="#8fc2ff" font-size="10" text-anchor="end">pronóstico</text><text x="'+(xe+4)+'" y="'+(m.t+11)+'" fill="#9aa8b8" font-size="10">proyección</text>';}
-  opt.ticks.forEach(function(t){h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" stroke="#25313f"/><text x="'+(m.l-6)+'" y="'+(Y(t)+4)+'" fill="#7f8fa1" font-size="11" text-anchor="end">'+opt.tf(t)+'</text>';});
+  [0,ymax/2,ymax].forEach(function(t){h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" stroke="#25313f"/><text x="'+(m.l-6)+'" y="'+(Y(t)+4)+'" fill="#7f8fa1" font-size="11" text-anchor="end">'+fN(t,t<10&&t%1?1:0)+'</text>';});
+  if(opt.now!=null&&opt.now>=0&&opt.now<n){var xn=X(opt.now);h+='<line x1="'+xn+'" x2="'+xn+'" y1="'+m.t+'" y2="'+(m.t+ih)+'" stroke="#b6c2cf" stroke-dasharray="3 3"/><text x="'+(xn+4)+'" y="'+(m.t+11)+'" fill="#b6c2cf" font-size="10">ahora</text>';}
+  var nl=Math.min(5,n);for(var k=0;k<nl;k++){var i=nl===1?0:Math.round(k*(n-1)/(nl-1));h+='<text x="'+X(i)+'" y="'+(Hh-8)+'" fill="#7f8fa1" font-size="11" text-anchor="'+(k===0?"start":(k===nl-1?"end":"middle"))+'">'+fmtS(ts[i])+'</text>';}
+  if(opt.type==="bar"){var bw=Math.max(0.8,iw/n-0.6);vals.forEach(function(v,i){if(v==null)return;var hh=Y(0)-Y(v);if(hh<0.4)return;h+='<path d="'+barPath(X(i)-bw/2,Y(v),bw,hh)+'" fill="'+(opt.now!=null&&i<=opt.now?"#7d8fa6":"#4ea1ff")+'"/>';});}
+  else{var seg="",pen=false;vals.forEach(function(v,i){if(v==null){pen=false;return;}seg+=(pen?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1);pen=true;});h+='<path d="'+seg+'" fill="none" stroke="#4ea1ff" stroke-width="2" stroke-linejoin="round"/>';}
   h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#3a4a5d"/>';
-  var nl=Math.min(5,n);for(var k=0;k<nl;k++){var i=nl===1?0:Math.round(k*(n-1)/(nl-1));h+='<text x="'+X(i)+'" y="'+(H2-8)+'" fill="#7f8fa1" font-size="11" text-anchor="'+(nl===1?"middle":(k===0?"start":(k===nl-1?"end":"middle")))+'">'+fmtS(days[i].d)+'</text>';}
-  if(opt.type==="bar"){
-    var bw=Math.max(1,iw/n-2);
-    vals.forEach(function(v,i){var hh=Y(0)-Y(v);if(hh<0.5)return;h+='<path d="'+barPath(X(i)-bw/2,Y(v),bw,hh)+'" fill="'+(days[i].src==="real"?"#4ea1ff":"#7d8fa6")+'"/>';});
-    opt.ref.forEach(function(r){h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(r.v)+'" y2="'+Y(r.v)+'" stroke="'+r.c+'" stroke-dasharray="4 4"/><text x="'+(m.l+iw-2)+'" y="'+(Y(r.v)-4)+'" fill="#b6c2cf" font-size="10" text-anchor="end">'+r.t+'</text>';});
-  }else if(n===1){h+='<circle cx="'+X(0)+'" cy="'+Y(vals[0])+'" r="6" fill="#4ea1ff"/>';}
-  else{
-    var seg=function(a,b,c){if(b<=a)return;var d=vals.slice(a,b+1).map(function(v,j){return (j?"L":"M")+X(a+j).toFixed(1)+","+Y(v).toFixed(1);}).join("");h+='<path d="'+d+'" fill="none" stroke="'+c+'" stroke-width="2" stroke-linejoin="round"/>';};
-    if(nr>0){seg(0,Math.min(nr,n-1),"#4ea1ff");if(nr<n)seg(nr-1>=0?nr-1:0,n-1,"#9fb0c4");}else seg(0,n-1,"#9fb0c4");
-  }
-  h+='<line id="'+id+'x" x1="0" x2="0" y1="'+m.t+'" y2="'+(m.t+ih)+'" stroke="#b6c2cf" stroke-dasharray="3 3" visibility="hidden"/><circle id="'+id+'d" r="5" fill="#4ea1ff" stroke="#0f1720" stroke-width="2" visibility="hidden"/>';
-  h+='<rect x="'+m.l+'" y="'+m.t+'" width="'+iw+'" height="'+ih+'" fill="transparent" id="'+id+'h"/>';
+  (opt.refs||[]).forEach(function(r){h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(r.v)+'" y2="'+Y(r.v)+'" stroke="'+r.c+'" stroke-dasharray="4 4"/><text x="'+(m.l+iw-2)+'" y="'+(Y(r.v)-4)+'" fill="#b6c2cf" font-size="10" text-anchor="end">'+r.t+'</text>';});
+  h+='<line id="'+id+'x" y1="'+m.t+'" y2="'+(m.t+ih)+'" stroke="#eef2f6" stroke-opacity=".6" visibility="hidden"/><rect x="'+m.l+'" y="'+m.t+'" width="'+iw+'" height="'+ih+'" fill="transparent" id="'+id+'h"/>';
   svg.innerHTML=h;
-  var hit=$(id+"h"),cx=$(id+"x"),dot=$(id+"d");
-  hit.addEventListener("mousemove",function(ev){
-    var b=svg.getBoundingClientRect(),xr=(ev.clientX-b.left)*W2/b.width,i=n<=1?0:Math.round((xr-m.l)/iw*(n-1));i=Math.max(0,Math.min(n-1,i));
-    cx.setAttribute("x1",X(i));cx.setAttribute("x2",X(i));cx.setAttribute("visibility","visible");
-    dot.setAttribute("cx",X(i));dot.setAttribute("cy",Y(vals[i]));dot.setAttribute("visibility","visible");
-    showTip(ev,'<b>'+fmt(days[i].d)+'</b> · <span style="color:'+(days[i].src==="real"?"#8fc2ff":"#9aa8b8")+'">'+(days[i].src==="real"?"pronóstico real":"proyección")+'</span><br>'+opt.tip(i));
-  });
-  hit.addEventListener("mouseleave",function(){cx.setAttribute("visibility","hidden");dot.setAttribute("visibility","hidden");hideTip();});
+  var hit=$(id+"h"),cx=$(id+"x");
+  hit.addEventListener("mousemove",function(ev){var b=svg.getBoundingClientRect(),xr=(ev.clientX-b.left)*W/b.width,i=Math.round((xr-m.l)/iw*(n-1));i=Math.max(0,Math.min(n-1,i));cx.setAttribute("x1",X(i));cx.setAttribute("x2",X(i));cx.setAttribute("visibility","visible");showTip(ev,opt.tip(i));});
+  hit.addEventListener("mouseleave",function(){cx.setAttribute("visibility","hidden");hideTip();});
 }
+function nice(v){var c=[1,2,5,10,15,20,25,30,40,50,60,80,100,150,200,250,300,400,500];for(var i=0;i<c.length;i++)if(v<=c[i])return c[i];return Math.ceil(v/100)*100;}
 
-// ---------------- Tooltip ----------------
+// ---------- Tooltip ----------
 var tip=$("tip");
 function showTip(ev,html){tip.innerHTML=html;tip.style.display="block";var x=ev.clientX+14,y=ev.clientY+14,w=tip.offsetWidth,h=tip.offsetHeight;if(x+w>innerWidth-8)x=ev.clientX-w-14;if(y+h>innerHeight-8)y=ev.clientY-h-14;tip.style.left=x+"px";tip.style.top=y+"px";}
 function hideTip(){tip.style.display="none";}
 
-// ---------------- Paneles estáticos ----------------
+// ---------- Paneles estáticos ----------
 function onoff(o){return o&&o.ok?'<span class="ok">✔</span>':'<span class="ko">⚠</span>';}
 function renderStatic(){
-  var en=CFG.enfen||{},h="";
-  h+='<div style="display:flex;gap:7px;align-items:center;font-size:13px"><span class="dot" style="background:var(--alto)"></span><b>ENFEN:</b> '+esc(en.estado||"—")+'</div>';
-  if(en.comunicado)h+='<div class="muted" style="margin:4px 0 0">'+esc(en.comunicado)+(en.fecha?" · "+esc(en.fecha):"")+'</div>';
-  if(en.resumen)h+='<div class="muted" style="margin:4px 0 0">'+esc(en.resumen)+'</div>';
-  var nq=D.noaa;
-  if(nq&&nq.ok){
-    var u=nq.ultimos[nq.ultimos.length-1],prev=nq.ultimos.length>1?nq.ultimos[nq.ultimos.length-2]:null,a=u.anom;
-    var cls=a>=2?"El Niño muy fuerte":a>=1.5?"El Niño fuerte":a>=1?"El Niño moderado":a>=0.5?"El Niño débil":a<=-0.5?"La Niña":"Neutro";
-    var tr=prev?(a>prev.anom?"▲":(a<prev.anom?"▼":"▶")):"";
-    h+='<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line)"><div class="muted">NOAA '+esc(nq.indice)+' · '+esc(u.temporada)+' '+u.anio+' (Pacífico central)</div><div class="row"><span class="big">'+(a>0?"+":"")+a.toFixed(2)+' °C</span><span style="font-size:12px;color:var(--t2)">'+tr+' '+cls+'</span></div></div>';
-  }else{
-    h+='<div class="muted" style="margin-top:8px">Índice NOAA no disponible en este momento.</div>';
-    $("liveTag").style.display="none";
+  var en=CFG.enfen||{},ic=CFG.icen,h="";
+  if(ic&&ic.valor!=null){
+    h+='<div class="muted">Índice Costero El Niño (ICEN, región Niño 1+2)</div><div class="row"><span class="big">'+(ic.valor>0?"+":"")+fN(ic.valor,2)+' °C</span><span style="font-size:12px;color:var(--t1);font-weight:600">'+esc(ic.categoria||"")+'</span></div>';
+    h+='<div class="muted">'+esc(ic.tipo||"")+' · '+esc(ic.mes||"")+'</div>';
   }
-  h+='<div class="muted" style="margin-top:8px">Verifique siempre el último comunicado: <a href="'+esc(en.url||"https://enfen.imarpe.gob.pe/")+'" target="_blank" rel="noopener">comunicados ENFEN</a></div>';
+  h+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><div style="font-size:13px"><span class="dot" style="background:var(--alto);margin-right:6px"></span><b>Estado ENFEN:</b> '+esc(en.estado||"—")+'</div>';
+  if(en.magnitud_esperada)h+='<div class="muted" style="margin-top:3px"><b style="color:var(--t2)">Magnitud esperada:</b> '+esc(en.magnitud_esperada)+'</div>';
+  if(en.comunicado)h+='<div class="muted" style="margin-top:3px">'+esc(en.comunicado)+(en.fecha?" · "+esc(en.fecha):"")+'</div></div>';
+  var nq=D.noaa;
+  if(nq&&nq.ok){var u=nq.ultimos[nq.ultimos.length-1];h+='<div class="muted" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">Contexto, Pacífico central (región Niño 3.4): NOAA '+esc(nq.indice)+' '+esc(u.temporada)+' '+u.anio+' = <b style="color:var(--t1)">'+(u.anom>0?"+":"")+fN(u.anom,2)+' °C</b></div>';}
+  h+='<div class="muted" style="margin-top:8px">Fuente oficial: <a href="'+esc(en.url||"https://enfen.imarpe.gob.pe/")+'" target="_blank" rel="noopener">comunicados ENFEN</a></div>';
   $("ensoBox").innerHTML=h;
   var s="",l=D.lluvia,c=D.caudal,li=D.limite;
-  s+='<li>'+onoff(l)+'<span><b>Lluvia (Open-Meteo):</b> '+(l&&l.ok?"pronóstico de 16 días · "+esc(l.actualizado):"no disponible; se usa proyección estacional")+'</span></li>';
-  s+='<li>'+onoff(c)+'<span><b>Caudal Rímac (GloFAS):</b> '+(c&&c.ok?"pronóstico de 30 días · "+esc(c.actualizado):"no disponible; se estima con lluvia de la cuenca alta")+'</span></li>';
-  s+='<li>'+onoff(nq)+'<span><b>Índice El Niño (NOAA):</b> '+(nq&&nq.ok?esc(nq.indice)+" · "+esc(nq.actualizado):"no disponible")+'</span></li>';
+  s+='<li>'+onoff(l)+'<span><b>Precipitación horaria (Open-Meteo):</b> '+(l&&l.ok?"7 días de análisis + 16 de pronóstico · "+esc(l.actualizado):"no disponible")+'</span></li>';
+  s+='<li>'+onoff(c)+'<span><b>Caudal del Rímac (GloFAS):</b> '+(c&&c.ok?"pronóstico diario · "+esc(c.actualizado):"no disponible")+'</span></li>';
+  s+='<li>'+onoff(nq)+'<span><b>RONI/ONI (NOAA):</b> '+(nq&&nq.ok?esc(nq.actualizado):"no disponible")+'</span></li>';
+  s+='<li><span class="ok">✔</span><span><b>ICEN y estado ENFEN:</b> actualización manual ('+esc((CFG.icen&&CFG.icen.mes)||"—")+')</span></li>';
   s+='<li>'+onoff(li)+'<span><b>Límite distrital:</b> '+(li?esc(li.fuente):"simplificado (respaldo)")+'</span></li>';
-  if(!DATA)s='<li><span class="ko">⚠</span><span>Vista sin servidor: solo proyección estacional.</span></li>';
   $("srcList").innerHTML=s;
-  $("genTxt").textContent=D.generado?("Datos actualizados: "+D.generado+" (hora de Lima)"):"";
+  $("genTxt").textContent=D.generado?("Datos consultados: "+D.generado+" (hora de Lima)"):"";
+  var sb='<p style="margin:0 0 8px">Más allá de 16 días los modelos no permiten pronosticar la lluvia día a día. Para la temporada de lluvias consulte el <b style="color:var(--t1)">pronóstico estacional del SENAMHI</b> (probabilidad de lluvias superiores, normales o inferiores a lo normal) y los <b style="color:var(--t1)">comunicados del ENFEN</b>.</p>';
+  if(en.estado)sb+='<p style="margin:0 0 8px">Estado actual: <b style="color:var(--t1)">'+esc(en.estado)+'</b>'+(en.magnitud_esperada?'; magnitud esperada: '+esc(en.magnitud_esperada):'')+'. '+esc(en.resumen||"")+'</p>';
+  sb+='<p style="margin:0">Para explorar consecuencias, use el modo <b style="color:var(--t1)">Escenario hipotético</b>.</p>';
+  $("seasonBox").innerHTML=sb;
+  var mt="";for(var d=1;d<=3;d++){mt+='<tr><td>'+DET[d]+'</td>';for(var r=0;r<4;r++)mt+='<td>'+badgeA(MATRIZ[d][r])+'</td>';mt+='</tr>';}
+  $("mtx").innerHTML=mt;
+  $("legend").innerHTML=AVISO.slice().reverse().map(function(a){return '<span><span class="dot" style="background:'+a.hex+'"></span>'+a.n+'</span>';}).join("")+'<span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#ffd45a" stroke-width="3"/></svg>Límite distrital</span><span>* zona de influencia</span>';
 }
 
-// ---------------- CSV ----------------
+// ---------- CSV ----------
 var lastRes=null;
 function csvText(){
-  var r=lastRes,rows=[["sector","tipo","lat","lon","susceptibilidad","vulnerabilidad","riesgo_max","nivel","fecha_pico","origen_pico","escenario_enso","fecha_inicial","fecha_final"]];
-  SECT.slice().sort(function(a,b){return r.sect[b.id].max-r.sect[a.id].max;}).forEach(function(s){var o=r.sect[s.id];
-    rows.push([s.nombre,TIPOS[s.tipo],s.lat,s.lon,s.susceptibilidad,s.vulnerabilidad,o.max.toFixed(3),level(o.max).n,iso(o.peak),o.peakSrc==="real"?"pronóstico":"proyección",r.e.n,iso(r.d0),iso(r.d1)]);});
+  var r=lastRes,rows=[["sector","ambito","tipo","lat","lon","susceptibilidad_ilustrativa","vulnerabilidad_ilustrativa","nivel_riesgo_referencia","aviso_maximo","fecha_aviso_maximo","modo","generado"]];
+  SECT.forEach(function(s){var o=r.sect[s.id];rows.push([s.nombre,s.ambito||"distrito",TIPOS[s.tipo],s.lat,s.lon,s.susceptibilidad,s.vulnerabilidad,RIESGO[o.rl].n,AVISO[o.max].n,o.fecha?isoD(o.fecha):"",st.mode==="proy"?"pronóstico "+st.hor+" días":"escenario hipotético",D.generado||""]);});
   return rows.map(function(x){return x.map(function(v){v=String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",");}).join("\n");
 }
 $("csvBtn").addEventListener("click",function(){
-  try{var blob=new Blob(["﻿"+csvText()],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);a.download="ranking_sat_enso_sjl_"+iso(lastRes.d0)+".csv";document.body.appendChild(a);a.click();a.remove();
-    $("csvMsg").textContent="";}
+  try{var blob=new Blob(["﻿"+csvText()],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="avisos_sat_sjl_"+isoD(today)+".csv";document.body.appendChild(a);a.click();a.remove();$("csvMsg").textContent="";}
   catch(e){$("csvMsg").textContent="La descarga no está permitida aquí; use «Copiar» y péguelo en Excel.";}
 });
-$("copyBtn").addEventListener("click",function(){
-  var t=csvText();
-  try{navigator.clipboard.writeText(t).then(function(){$("csvMsg").textContent="Tabla copiada: péguela en Excel.";},function(){$("csvMsg").textContent="No se pudo copiar automáticamente.";});}
-  catch(e){$("csvMsg").textContent="No se pudo copiar automáticamente.";}
-});
+$("copyBtn").addEventListener("click",function(){var t=csvText();try{navigator.clipboard.writeText(t).then(function(){$("csvMsg").textContent="Tabla copiada: péguela en Excel.";},function(){$("csvMsg").textContent="No se pudo copiar automáticamente.";});}catch(e){$("csvMsg").textContent="No se pudo copiar automáticamente.";}});
 
-// ---------------- Render ----------------
+// ---------- Render ----------
 function render(){
   var res=compute();lastRes=res;
-  $("icenTxt").textContent="Factor sobre la proyección: ×"+res.e.f.toFixed(2).replace(".",",")+" · "+res.e.icen;
-  $("rangeChip").textContent=st.mode==="proy"?(fmt(res.d0)+" → "+fmt(res.d1)+" · "+res.days.length+" días ("+res.nReal+" con pronóstico real)"):"Evento simulado · "+fmt(res.d0);
-  $("minRv").textContent=st.minR.toFixed(2);
-  $("r24v").textContent=$("r24").value+" mm";$("r72v").textContent=Math.max(+$("r72").value,+$("r24").value)+" mm";$("qv").textContent=$("q").value+" m³/s";
-  var cnt={};LV.forEach(function(l){cnt[l.k]=0;});
-  SECT.forEach(function(s){cnt[level(res.sect[s.id].max).k]++;});
-  $("kpis").innerHTML=LV.slice().reverse().map(function(l){return '<div class="kpi"><div class="n">'+cnt[l.k]+'</div><div class="l"><span style="color:'+l.hex+'">'+l.ic+'</span>'+l.n+'</div></div>';}).join("");
-  $("legend").innerHTML=LV.slice().reverse().map(function(l){return '<span><span class="dot" style="background:'+l.hex+'"></span>'+l.n+'</span>';}).join("")+'<span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#ffd45a" stroke-width="3"/></svg>Límite distrital</span>';
+  var noData=st.mode==="proy"&&!res.dias.length;
+  $("banner").style.display=noData?"block":"none";
+  if(noData)$("banner").innerHTML='<span class="muted" style="font-size:13px"><b style="color:var(--t1)">No hay pronóstico disponible en este momento.</b> La fuente de datos no respondió; vuelva a intentarlo más tarde o use el modo «Escenario hipotético».</span>';
+  $("rangeChip").textContent=st.mode==="proy"?(res.dias.length?("Pronóstico: "+fmt(res.dias[0].d)+" → "+fmt(res.dias[res.dias.length-1].d)):"Pronóstico no disponible"):"Escenario hipotético (no es un pronóstico)";
+  $("i1v").textContent=fN(+$("i1").value)+" mm/h";$("r24v").textContent=fN(+$("r24").value,0)+" mm";$("r72v").textContent=fN(Math.max(+$("r72").value,+$("r24").value),0)+" mm";$("qv").textContent=$("q").value+" m³/s";
+  var cnt=[0,0,0,0];SECT.forEach(function(s){cnt[res.sect[s.id].max]++;});
+  $("kpis").innerHTML=[3,2,1,0].map(function(a){return '<div class="kpi"><div class="n">'+(noData?"—":cnt[a])+'</div><div class="l"><span style="color:'+AVISO[a].hex+'">'+AVISO[a].ic+'</span>'+AVISO[a].n+'</div></div>';}).join("")+
+    '<div class="kpi"><div class="n">'+SECT.length+'</div><div class="l">Sectores evaluados</div></div>';
   drawMarkers(res);
-  var rows=SECT.slice().sort(function(a,b){return res.sect[b.id].max-res.sect[a.id].max;});
-  $("tbody").innerHTML=rows.map(function(s){var o=res.sect[s.id];if(o.max<st.minR)return "";return '<tr data-id="'+s.id+'" class="'+(s.id===st.sel?"sel":"")+'"><td>'+esc(s.nombre)+'</td><td>'+TIPOS[s.tipo]+'</td><td class="num">'+o.max.toFixed(2)+'</td><td>'+badge(o.max)+'</td><td>'+fmtS(o.peak)+'</td></tr>';}).join("")||'<tr><td colspan="5" class="muted">Ningún sector supera el índice mínimo seleccionado.</td></tr>';
+  var rows=SECT.slice().sort(function(a,b){var A=res.sect[a.id],B=res.sect[b.id];return (B.max-A.max)||(B.rl-A.rl);});
+  $("tbody").innerHTML=rows.map(function(s){var o=res.sect[s.id];if(o.max<st.minA)return "";return '<tr data-id="'+s.id+'" class="'+(s.id===st.sel?"sel":"")+'"><td>'+esc(s.nombre)+(s.ambito==="influencia"?' <span class="muted">*</span>':'')+'</td><td>'+TIPOS[s.tipo]+'</td><td>'+badgeR(o.rl)+'</td><td>'+badgeA(o.max)+'</td><td>'+(o.fecha?fmtS(o.fecha):"—")+'</td></tr>';}).join("")||'<tr><td colspan="5" class="muted">Ningún sector cumple el filtro seleccionado.</td></tr>';
   Array.prototype.forEach.call($("tbody").querySelectorAll("tr[data-id]"),function(tr){tr.addEventListener("click",function(){var s=SECT.filter(function(x){return x.id===tr.getAttribute("data-id");})[0];st.sel=s.id;render();if(map)map.flyTo([s.lat,s.lon],15,{duration:1});});});
+  // Detalle
   var s=SECT.filter(function(x){return x.id===st.sel;})[0],o=res.sect[s.id];
-  $("dName").textContent=s.nombre;$("dLvl").innerHTML=badge(o.max);
-  $("dChips").innerHTML='<span class="chip">Tipo: '+TIPOS[s.tipo]+'</span><span class="chip">Susceptibilidad: '+s.susceptibilidad.toFixed(2)+'</span><span class="chip">Vulnerabilidad: '+s.vulnerabilidad.toFixed(2)+'</span><span class="chip">Riesgo máx.: '+o.max.toFixed(2)+' ('+fmt(o.peak)+')</span>';
+  $("dName").textContent=s.nombre+(s.ambito==="influencia"?" (zona de influencia)":"");$("dLvl").innerHTML=badgeA(o.max);
+  var ex=s.elementos_expuestos||{},exTxt=(ex.poblacion!=null?fN(ex.poblacion,0)+" hab.":"pendiente de cargar (INEI / catastro)");
+  $("dChips").innerHTML='<span class="chip">Tipo: '+TIPOS[s.tipo]+'</span><span class="chip">Riesgo de referencia: '+RIESGO[o.rl].n+'</span><span class="chip">Susceptibilidad (ilustrativa): '+fN(s.susceptibilidad,2)+'</span><span class="chip">Vulnerabilidad (ilustrativa): '+fN(s.vulnerabilidad,2)+'</span><span class="chip">Elementos expuestos: '+exTxt+'</span>';
   $("dNote").textContent=s.nota||"";
-  var bands=[{lo:0,hi:.2,c:LV[0].hex},{lo:.2,hi:.4,c:LV[1].hex},{lo:.4,hi:.6,c:LV[2].hex},{lo:.6,hi:.8,c:LV[3].hex},{lo:.8,hi:1,c:LV[4].hex}];
-  chart("cRisk",res.days,o.arr,{ymax:1,ticks:[0,.2,.4,.6,.8,1],tf:function(t){return t.toFixed(1);},bands:bands,
-    tip:function(i){return 'Riesgo: <b>'+o.arr[i].toFixed(2)+'</b> · '+level(o.arr[i]).n;}});
-  var rv=res.days.map(function(x){return x.r24;}),rmax=Math.max(40,Math.ceil(Math.max.apply(null,rv)*1.1/10)*10);
-  chart("cRain",res.days,rv,{type:"bar",ymax:rmax,ticks:[0,rmax/4,rmax/2,rmax*3/4,rmax],tf:function(t){return Math.round(t);},
-    ref:[{v:10,c:"#fab219",t:"10 mm"},{v:20,c:"#ec835a",t:"20 mm"},{v:30,c:"#d03b3b",t:"30 mm"}],
-    tip:function(i){var x=res.days[i],t='Lluvia 24 h cabeceras: <b>'+x.r24.toFixed(1)+' mm</b><br>Acum. 72 h: '+x.r72.toFixed(1)+' mm<br>Caudal Rímac: '+Math.round(x.q)+' m³/s <span style="color:#7f8fa1">('+x.qsrc+')</span>';
-      if(x.real){t+='<br><span style="color:#7f8fa1">';Object.keys(x.real.cabPts).forEach(function(k){t+=esc(k)+': '+x.real.cabPts[k].toFixed(1)+' mm<br>';});Object.keys(x.real.altaPts).forEach(function(k){t+=esc(k)+': '+x.real.altaPts[k].toFixed(1)+' mm<br>';});t+='</span>';}
-      return t;}});
+  $("strip").innerHTML=res.dias.map(function(x,i){var a=AVISO[o.av[i]];return '<div class="cell" title="'+esc(fmt(x.d)+": "+a.n+" · detonante "+DET[o.dt[i]].toLowerCase())+'" style="background:'+a.hex+';color:'+a.fg+'"><b>'+(st.mode==="proy"?fmtS(x.d):"Escenario")+'</b><span>'+a.n.replace("Aviso ","")+'</span></div>';}).join("");
+  // Gráficos
+  if(st.mode==="proy"&&H&&res.dias.length){
+    var i0=Math.max(0,H.nowIdx-72),last=res.dias[res.dias.length-1].d,end=new Date(last);end.setDate(end.getDate()+1);
+    var i1=H.t.length-1;for(var k=0;k<H.t.length;k++){if(H.t[k]>=end){i1=k-1;break;}}
+    var ts=H.t.slice(i0,i1+1),pp=H.pp.slice(i0,i1+1),now=H.nowIdx-i0;
+    var tipH=function(i){var g=i0+i;return '<b>'+H.t[g].toLocaleString("es-PE",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+'</b> · '+(g<=H.nowIdx?"análisis":"pronóstico")+'<br>Precipitación: <b>'+fN(H.pp[g])+' mm/h</b><br>Acumulado 24 h: '+fN(rolling(H.pp,24,g))+' mm<br><span style="color:#9aa8b8">Contexto: HR '+fN(H.hr[g],0)+' % · T '+fN(H.tt[g])+' °C · humedad del suelo '+fN(H.so[g],3)+' m³/m³</span>';};
+    chart("cA",ts,pp,{type:"bar",now:now,nice:function(v){return nice(Math.max(v,U.precipitacion_1h_mm[2]*1.1));},refs:[{v:U.precipitacion_1h_mm[0],c:"#fab219",t:"U1"},{v:U.precipitacion_1h_mm[1],c:"#f07a2b",t:"U2"},{v:U.precipitacion_1h_mm[2],c:"#d03b3b",t:"U3"}],tip:tipH});
+    if(s.tipo==="ribera"){
+      $("cBtitle").textContent="Caudal diario pronosticado en la estación Chosica (m³/s)";
+      var qd=res.dias.map(function(x){return x.q;}),qt=res.dias.map(function(x){return x.d;});
+      chart("cB",qt,qd,{nice:function(v){return nice(Math.max(v,U.caudal_chosica_m3s[2]*1.1));},refs:[{v:U.caudal_chosica_m3s[0],c:"#fab219",t:"U1"},{v:U.caudal_chosica_m3s[1],c:"#f07a2b",t:"U2"},{v:U.caudal_chosica_m3s[2],c:"#d03b3b",t:"U3"}],tip:function(i){return '<b>'+fmt(qt[i])+'</b><br>Caudal: '+(qd[i]!=null?fN(qd[i],0)+' m³/s':'sin dato');}});
+    }else{
+      $("cBtitle").textContent="Precipitación acumulada en 24 h, ventana móvil (mm)";
+      var r24=ts.map(function(_,i){return rolling(H.pp,24,i0+i);});
+      chart("cB",ts,r24,{now:now,nice:function(v){return nice(Math.max(v,U.precipitacion_24h_mm[2]*1.1));},refs:[{v:U.precipitacion_24h_mm[0],c:"#fab219",t:"U1"},{v:U.precipitacion_24h_mm[1],c:"#f07a2b",t:"U2"},{v:U.precipitacion_24h_mm[2],c:"#d03b3b",t:"U3"}],tip:tipH});
+    }
+    var dx=res.dias[0];$("ctxTxt").textContent="Hoy: intensidad máx. "+fN(dx.i1)+" mm/h · acumulado 24 h "+fN(dx.r24)+" mm · 72 h "+fN(dx.r72)+" mm · IPA "+fN(dx.ipa)+" mm"+(dx.ipa>=U.ipa_saturacion_mm?" (suelo húmedo: umbrales de 24 h reducidos)":"")+".";
+  }else{
+    chart("cA",[],[],{});chart("cB",[],[],{});$("cBtitle").textContent="";
+    $("ctxTxt").textContent=st.mode==="evt"?"En el modo de escenario hipotético no se muestran series de tiempo.":"";
+  }
 }
 
-// ---------------- Eventos ----------------
-["d0","d1","r24","r72","q"].forEach(function(id){$(id).addEventListener("input",render);});
-Array.prototype.forEach.call(document.querySelectorAll(".presets button"),function(b){b.addEventListener("click",function(){setRange(b.getAttribute("data-p"));render();});});
-$("enso").addEventListener("change",function(){st.enso=this.value;render();});
-$("minR").addEventListener("input",function(){st.minR=+this.value;render();});
+// ---------- Eventos ----------
+["i1","r24","r72","q","sat"].forEach(function(id){$(id).addEventListener("input",render);});
+Array.prototype.forEach.call(document.querySelectorAll("[data-h]"),function(b){b.addEventListener("click",function(){st.hor=+b.getAttribute("data-h");document.querySelectorAll("[data-h]").forEach(function(x){x.classList.toggle("sel",x===b);});render();});});
+Array.prototype.forEach.call(document.querySelectorAll("[data-e]"),function(b){b.addEventListener("click",function(){var e=+b.getAttribute("data-e")-1;
+  $("i1").value=U.precipitacion_1h_mm[e];$("r24").value=U.precipitacion_24h_mm[e];$("r72").value=U.precipitacion_72h_mm[e];$("q").value=U.caudal_chosica_m3s[e];render();});});
+$("minA").addEventListener("change",function(){st.minA=+this.value;render();});
 $("buscar").addEventListener("change",function(){goTo(this.value);});
 $("buscar").addEventListener("keydown",function(e){if(e.key==="Enter")goTo(this.value);});
-$("mProy").addEventListener("click",function(){st.mode="proy";this.classList.add("on");$("mEvt").classList.remove("on");$("evtBox").style.display="none";render();});
-$("mEvt").addEventListener("click",function(){st.mode="evt";this.classList.add("on");$("mProy").classList.remove("on");$("evtBox").style.display="block";render();});
-renderStatic();
-initMap();
-render();
+$("mProy").addEventListener("click",function(){st.mode="proy";this.classList.add("on");$("mEvt").classList.remove("on");$("evtBox").style.display="none";$("horBox").style.display="block";render();});
+$("mEvt").addEventListener("click",function(){st.mode="evt";this.classList.add("on");$("mProy").classList.remove("on");$("evtBox").style.display="block";$("horBox").style.display="none";render();});
+renderStatic();initMap();render();
 })();
+
 </script>
 </body>
 </html>

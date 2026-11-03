@@ -7,7 +7,7 @@ proyección estacional. Los errores NO se guardan en caché: se reintenta en la
 siguiente visita.
 
 Fuentes (gratuitas, sin clave):
-- Open-Meteo Forecast API ............ lluvia diaria pronosticada (16 días)
+- Open-Meteo Forecast API ............ precipitación horaria, humedad, temperatura y humedad del suelo
 - Open-Meteo Flood API (GloFAS) ...... caudal diario pronosticado del Rímac
 - NOAA CPC (RONI / ONI) .............. índice El Niño del Pacífico central
 - OpenStreetMap Nominatim ............ límite distrital de San Juan de Lurigancho
@@ -39,35 +39,48 @@ def leer_json(nombre: str):
     return json.loads((DATA_DIR / nombre).read_text(encoding="utf-8"))
 
 
-# ---------------------------------------------------------------- lluvia
+# ---------------------------------------------------------------- lluvia (horaria)
+VARS_HORARIAS = "precipitation,relative_humidity_2m,temperature_2m,soil_moisture_0_to_7cm"
+
+
+def _r(v, n=1):
+    return None if v is None else round(float(v), n)
+
+
 @st.cache_data(ttl=3 * 3600, show_spinner=False)
 def _lluvia(puntos: tuple) -> dict:
-    """puntos: tupla de (nombre, lat, lon). Devuelve lluvia diaria por punto."""
+    """puntos: tupla de (nombre, lat, lon). Devuelve series horarias por punto
+    (7 días de análisis del modelo + 16 días de pronóstico), hora de Lima."""
     params = {
         "latitude": ",".join(str(p[1]) for p in puntos),
         "longitude": ",".join(str(p[2]) for p in puntos),
-        "daily": "precipitation_sum",
+        "hourly": VARS_HORARIAS,
         "timezone": TZ,
         "forecast_days": 16,
-        "past_days": 2,
+        "past_days": 7,
     }
     r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, headers=UA, timeout=12)
     r.raise_for_status()
     js = r.json()
     if isinstance(js, dict):
         js = [js]
-    fechas = js[0]["daily"]["time"]
+    horas = js[0]["hourly"]["time"]
     serie = {}
     for p, j in zip(puntos, js):
-        serie[p[0]] = [float(v) if v is not None else None for v in j["daily"]["precipitation_sum"]]
-    return {"ok": True, "fechas": fechas, "puntos": serie, "actualizado": _stamp()}
+        h = j["hourly"]
+        serie[p[0]] = {
+            "pp": [_r(v) for v in h["precipitation"]],
+            "hr": [_r(v, 0) for v in h.get("relative_humidity_2m", [])],
+            "t": [_r(v) for v in h.get("temperature_2m", [])],
+            "suelo": [_r(v, 3) for v in h.get("soil_moisture_0_to_7cm", [])],
+        }
+    return {"ok": True, "horas": horas, "puntos": serie, "actualizado": _stamp()}
 
 
 def lluvia_pronostico(cfg: dict) -> dict:
     puntos = tuple((p["nombre"], p["lat"], p["lon"]) for p in cfg["cabeceras"] + cfg["cuenca_alta"])
     try:
-        out = _lluvia(puntos)
-        out = dict(out)
+        out = dict(_lluvia(puntos))
         out["cabeceras"] = [p["nombre"] for p in cfg["cabeceras"]]
         out["cuenca_alta"] = [p["nombre"] for p in cfg["cuenca_alta"]]
         return out

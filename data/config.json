@@ -1,11 +1,33 @@
 {
   "enfen": {
     "estado": "Alerta de El Niño Costero",
-    "comunicado": "Comunicado Oficial ENFEN N° 16-2026",
+    "magnitud_esperada": "Extraordinaria (mayor probabilidad entre setiembre de 2026 y enero de 2027)",
+    "comunicado": "Comunicado Oficial ENFEN N.° 16-2026",
     "fecha": "setiembre de 2026",
-    "resumen": "Mayor probabilidad de magnitud extraordinaria en la región Niño 1+2 entre setiembre de 2026 y enero de 2027; el evento se extendería hasta mediados del otoño de 2027.",
-    "url": "https://www.gob.pe/institucion/senamhi/colecciones/1308-comunicados-enfen",
-    "escenario_por_defecto": "ext"
+    "resumen": "El evento se extendería hasta mediados del otoño de 2027.",
+    "url": "https://www.gob.pe/institucion/senamhi/colecciones/1308-comunicados-enfen"
+  },
+  "icen": {
+    "valor": 3.61,
+    "mes": "agosto de 2026",
+    "tipo": "ICEN temporal",
+    "categoria": "Cálida Extraordinaria",
+    "fuente": "IGP, informe técnico ENFEN (la información oficial definitiva es la del ENFEN)",
+    "url": "https://enfen.imarpe.gob.pe/"
+  },
+  "umbrales": {
+    "nota": "Valores referenciales para la cabecera de las quebradas. Deben reemplazarse por los percentiles P90 / P95 / P99 del estudio del SENAMHI para la cuenca del Rímac y por los umbrales hidrológicos oficiales de la estación Chosica.",
+    "precipitacion_1h_mm": [3, 6, 10],
+    "precipitacion_24h_mm": [8, 15, 25],
+    "precipitacion_72h_mm": [15, 25, 40],
+    "ipa_k": 0.85,
+    "ipa_saturacion_mm": 10,
+    "reduccion_umbral_24h_por_ipa": 0.8,
+    "caudal_chosica_m3s": [70, 100, 140]
+  },
+  "riesgo": {
+    "nota": "Nivel de riesgo de referencia = susceptibilidad × vulnerabilidad (ilustrativo). Cortes: Bajo < 0,30 ≤ Medio < 0,45 ≤ Alto < 0,62 ≤ Muy alto.",
+    "cortes": [0.30, 0.45, 0.62]
   },
   "cabeceras": [
     {"nombre": "Cabecera Qda. Canto Grande (Jicamarca alto)", "lat": -11.875, "lon": -76.905},
@@ -16,5 +38,5 @@
     {"nombre": "San Mateo", "lat": -11.759, "lon": -76.300},
     {"nombre": "Carampoma (Santa Eulalia)", "lat": -11.656, "lon": -76.517}
   ],
-  "punto_caudal": {"nombre": "Río Rímac en Chosica", "lat": -11.935, "lon": -76.690}
+  "punto_caudal": {"nombre": "Estación hidrométrica Chosica (río Rímac)", "lat": -11.935, "lon": -76.690}
 }

@@ -1,5 +1,5 @@
 """
-Sistema de Alerta Temprana de Huaicos, Deslizamientos e Inundación (ENSO)
+Sistema de Alerta Temprana ante Huaicos, Movimientos en Masa e Inundaciones asociados a El Niño Costero
 San Juan de Lurigancho – Lima, Perú
 Autor: Perez Flores Brandon W. · https://www.linkedin.com/in/brandon-perez-flores/
 
@@ -39,6 +39,7 @@ sectores = datos.leer_json("sectores.json")
 with st.spinner("Consultando pronósticos y estado ENSO…"):
     payload = {
         "generado": datos.ahora_lima().strftime("%Y-%m-%d %H:%M"),
+        "ahora": datos.ahora_lima().strftime("%Y-%m-%dT%H:00"),
         "hoy": datos.ahora_lima().strftime("%Y-%m-%d"),
         "config": cfg,
         "sectores": sectores,
@@ -53,8 +54,8 @@ datos_js = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 html = plantilla.replace("/*__DATA__*/null", datos_js, 1)
 
 if hasattr(st, "iframe"):
-    st.iframe(html, height=1750)
+    st.iframe(html, height=2000)
 else:  # versiones antiguas de Streamlit
     import streamlit.components.v1 as components
 
-    components.html(html, height=1750, scrolling=True)
+    components.html(html, height=2000, scrolling=True)
