@@ -9,9 +9,15 @@ SENAMHI, ENFEN, INDECI, CENEPRED ni de la Municipalidad de SJL.
 import json
 from pathlib import Path
 
+import importlib
+
 import streamlit as st
 
 import datos
+
+# Recarga el módulo de datos en cada ejecución: evita que Streamlit siga usando
+# una versión anterior en memoria después de una actualización del repositorio.
+datos = importlib.reload(datos)
 
 st.set_page_config(
     page_title="SAT ENSO · San Juan de Lurigancho",
@@ -38,6 +44,7 @@ sectores = datos.leer_json("sectores.json")
 
 with st.spinner("Consultando pronósticos y estado ENSO…"):
     payload = {
+        "version": 3,
         "generado": datos.ahora_lima().strftime("%Y-%m-%d %H:%M"),
         "ahora": datos.ahora_lima().strftime("%Y-%m-%dT%H:00"),
         "hoy": datos.ahora_lima().strftime("%Y-%m-%d"),

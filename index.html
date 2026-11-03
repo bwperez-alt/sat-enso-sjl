@@ -288,6 +288,7 @@ var DATA = /*__DATA__*/null;
 "use strict";
 var $=function(id){return document.getElementById(id);};
 var D=DATA||{};
+var VERSION_ESPERADA=3;
 var FALLBACK_LIM={type:"Polygon",coordinates:[[[-76.93137,-11.94217],[-76.9694,-11.99493],[-76.95311,-12.02226],[-77.00954,-12.03087],[-77.01261,-12.03732],[-77.03065,-11.99639],[-77.02828,-11.96068],[-76.98795,-11.89715],[-76.94228,-11.86087],[-76.91211,-11.88927],[-76.93137,-11.94217]]]};
 var SECT=D.sectores||[{id:"jic",nombre:"Jicamarca – Alto Canto Grande",lat:-11.895,lon:-76.952,tipo:"quebrada",susceptibilidad:0.92,vulnerabilidad:0.82,ambito:"influencia",nota:""}];
 var CFG=D.config||{};
@@ -318,10 +319,10 @@ function fmtS(d){return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short
 var today=D.hoy?parseD(D.hoy):new Date();today.setHours(0,0,0,0);
 
 // ---------- Series horarias ----------
-var H=null; // {t:[Date], key:[iso], pp:[], hr:[], t2:[], suelo:[], nowIdx}
-(function(){
-  var L=D.lluvia;if(!L||!L.ok)return;
-  var cab=L.cabeceras||[];if(!cab.length)return;
+var H=null;
+try{(function(){
+  var L=D.lluvia;if(!L||!L.ok||!Array.isArray(L.horas)||!L.puntos)return;
+  var cab=(L.cabeceras||[]).filter(function(c){return L.puntos[c]&&Array.isArray(L.puntos[c].pp);});if(!cab.length)return;
   var n=L.horas.length,pp=[],hr=[],tt=[],so=[],t=[];
   for(var i=0;i<n;i++){
     var m=null,shr=0,chr=0,st=0,ct=0,ss=0,cs=0;
@@ -333,8 +334,8 @@ var H=null; // {t:[Date], key:[iso], pp:[], hr:[], t2:[], suelo:[], nowIdx}
   var nowIdx=D.ahora?L.horas.indexOf(D.ahora):-1;
   if(nowIdx<0){var nowD=new Date();for(var k=0;k<n;k++){if(t[k]<=nowD)nowIdx=k;}}
   H={t:t,key:L.horas,pp:pp,hr:hr,tt:tt,so:so,nowIdx:nowIdx};
-})();
-var QD={};if(D.caudal&&D.caudal.ok){D.caudal.fechas.forEach(function(f,i){if(D.caudal.caudal[i]!=null)QD[f]=D.caudal.caudal[i];});}
+})();}catch(e){H=null;console.error(e);}
+var QD={};if(D.caudal&&D.caudal.ok&&Array.isArray(D.caudal.fechas)&&Array.isArray(D.caudal.caudal)){D.caudal.fechas.forEach(function(f,i){if(D.caudal.caudal[i]!=null)QD[f]=D.caudal.caudal[i];});}
 
 function rolling(arr,w,i){var s=0,c=0;for(var k=Math.max(0,i-w+1);k<=i;k++){if(arr[k]!=null){s+=arr[k];c++;}}return c?s:null;}
 // Resumen diario desde las series horarias
@@ -505,7 +506,8 @@ function render(){
   var res=compute();lastRes=res;
   var noData=st.mode==="proy"&&!res.dias.length;
   $("banner").style.display=noData?"block":"none";
-  if(noData)$("banner").innerHTML='<span class="muted" style="font-size:13px"><b style="color:var(--t1)">No hay pronóstico disponible en este momento.</b> La fuente de datos no respondió; vuelva a intentarlo más tarde o use el modo «Escenario hipotético».</span>';
+  if(noData&&DATA&&D.version!==VERSION_ESPERADA)$("banner").innerHTML='<span class="muted" style="font-size:13px"><b style="color:var(--t1)">La aplicación se está actualizando.</b> Reinicie la app desde «Gestionar la aplicación → Reboot app» o espere unos minutos y recargue.</span>';
+  else if(noData)$("banner").innerHTML='<span class="muted" style="font-size:13px"><b style="color:var(--t1)">No hay pronóstico disponible en este momento.</b> La fuente de datos no respondió; vuelva a intentarlo más tarde o use el modo «Escenario hipotético».</span>';
   $("rangeChip").textContent=st.mode==="proy"?(res.dias.length?("Pronóstico: "+fmt(res.dias[0].d)+" → "+fmt(res.dias[res.dias.length-1].d)):"Pronóstico no disponible"):"Escenario hipotético (no es un pronóstico)";
   $("i1v").textContent=fN(+$("i1").value)+" mm/h";$("r24v").textContent=fN(+$("r24").value,0)+" mm";$("r72v").textContent=fN(Math.max(+$("r72").value,+$("r24").value),0)+" mm";$("qv").textContent=$("q").value+" m³/s";
   var cnt=[0,0,0,0];SECT.forEach(function(s){cnt[res.sect[s.id].max]++;});
@@ -527,7 +529,7 @@ function render(){
     var i0=Math.max(0,H.nowIdx-72),last=res.dias[res.dias.length-1].d,end=new Date(last);end.setDate(end.getDate()+1);
     var i1=H.t.length-1;for(var k=0;k<H.t.length;k++){if(H.t[k]>=end){i1=k-1;break;}}
     var ts=H.t.slice(i0,i1+1),pp=H.pp.slice(i0,i1+1),now=H.nowIdx-i0;
-    var tipH=function(i){var g=i0+i;return '<b>'+H.t[g].toLocaleString("es-PE",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+'</b> · '+(g<=H.nowIdx?"análisis":"pronóstico")+'<br>Precipitación: <b>'+fN(H.pp[g])+' mm/h</b><br>Acumulado 24 h: '+fN(rolling(H.pp,24,g))+' mm<br><span style="color:#9aa8b8">Contexto: HR '+fN(H.hr[g],0)+' % · T '+fN(H.tt[g])+' °C · humedad del suelo '+fN(H.so[g],3)+' m³/m³</span>';};
+    var tipH=function(i){var g=i0+i;return '<b>'+H.t[g].toLocaleString("es-PE",{weekday:"short",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})+'</b> · '+(g<=H.nowIdx?"análisis":"pronóstico")+'<br>Precipitación: <b>'+fN(H.pp[g])+' mm/h</b><br>Acumulado 24 h: '+fN(rolling(H.pp,24,g))+' mm<br><span style="color:#9aa8b8">Contexto: HR '+fN(H.hr[g],0)+' % · T '+fN(H.tt[g])+' °C · humedad del suelo '+fN(H.so[g],2)+' m³/m³</span>';};
     chart("cA",ts,pp,{type:"bar",now:now,nice:function(v){return nice(Math.max(v,U.precipitacion_1h_mm[2]*1.1));},refs:[{v:U.precipitacion_1h_mm[0],c:"#fab219",t:"U1"},{v:U.precipitacion_1h_mm[1],c:"#f07a2b",t:"U2"},{v:U.precipitacion_1h_mm[2],c:"#d03b3b",t:"U3"}],tip:tipH});
     if(s.tipo==="ribera"){
       $("cBtitle").textContent="Caudal diario pronosticado en la estación Chosica (m³/s)";
@@ -555,7 +557,10 @@ $("buscar").addEventListener("change",function(){goTo(this.value);});
 $("buscar").addEventListener("keydown",function(e){if(e.key==="Enter")goTo(this.value);});
 $("mProy").addEventListener("click",function(){st.mode="proy";this.classList.add("on");$("mEvt").classList.remove("on");$("evtBox").style.display="none";$("horBox").style.display="block";render();});
 $("mEvt").addEventListener("click",function(){st.mode="evt";this.classList.add("on");$("mProy").classList.remove("on");$("evtBox").style.display="block";$("horBox").style.display="none";render();});
-renderStatic();initMap();render();
+function fallo(etapa,e){try{console.error(etapa,e);var b=$("banner");b.style.display="block";b.innerHTML+='<div class="muted" style="font-size:13px"><b style="color:var(--t1)">Aviso técnico ('+etapa+'):</b> '+esc(e&&e.message||e)+'. Recargue la página; si persiste, reinicie la aplicación.</div>';}catch(_){}}
+try{renderStatic();}catch(e){fallo("paneles",e);}
+try{initMap();}catch(e){fallo("mapa",e);}
+try{render();}catch(e){fallo("cálculo",e);}
 })();
 
 </script>

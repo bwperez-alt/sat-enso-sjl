@@ -40,7 +40,7 @@ def leer_json(nombre: str):
 
 
 # ---------------------------------------------------------------- lluvia (horaria)
-VARS_HORARIAS = "precipitation,relative_humidity_2m,temperature_2m,soil_moisture_0_to_7cm"
+VARS_HORARIAS = "precipitation,relative_humidity_2m,temperature_2m,soil_moisture_0_to_1cm"
 
 
 def _r(v, n=1):
@@ -60,6 +60,9 @@ def _lluvia(puntos: tuple) -> dict:
         "past_days": 7,
     }
     r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, headers=UA, timeout=12)
+    if r.status_code == 400:  # alguna variable de contexto no disponible: se pide solo la precipitación
+        params["hourly"] = "precipitation"
+        r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, headers=UA, timeout=12)
     r.raise_for_status()
     js = r.json()
     if isinstance(js, dict):
@@ -72,7 +75,7 @@ def _lluvia(puntos: tuple) -> dict:
             "pp": [_r(v) for v in h["precipitation"]],
             "hr": [_r(v, 0) for v in h.get("relative_humidity_2m", [])],
             "t": [_r(v) for v in h.get("temperature_2m", [])],
-            "suelo": [_r(v, 3) for v in h.get("soil_moisture_0_to_7cm", [])],
+            "suelo": [_r(v, 3) for v in h.get("soil_moisture_0_to_1cm", [])],
         }
     return {"ok": True, "horas": horas, "puntos": serie, "actualizado": _stamp()}
 
