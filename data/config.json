@@ -1,0 +1,20 @@
+{
+  "enfen": {
+    "estado": "Alerta de El Niño Costero",
+    "comunicado": "Comunicado Oficial ENFEN N° 16-2026",
+    "fecha": "setiembre de 2026",
+    "resumen": "Mayor probabilidad de magnitud extraordinaria en la región Niño 1+2 entre setiembre de 2026 y enero de 2027; el evento se extendería hasta mediados del otoño de 2027.",
+    "url": "https://www.gob.pe/institucion/senamhi/colecciones/1308-comunicados-enfen",
+    "escenario_por_defecto": "ext"
+  },
+  "cabeceras": [
+    {"nombre": "Cabecera Qda. Canto Grande (Jicamarca alto)", "lat": -11.875, "lon": -76.905},
+    {"nombre": "Cabecera Qda. Huaycoloro", "lat": -11.905, "lon": -76.835}
+  ],
+  "cuenca_alta": [
+    {"nombre": "Matucana", "lat": -11.844, "lon": -76.385},
+    {"nombre": "San Mateo", "lat": -11.759, "lon": -76.300},
+    {"nombre": "Carampoma (Santa Eulalia)", "lat": -11.656, "lon": -76.517}
+  ],
+  "punto_caudal": {"nombre": "Río Rímac en Chosica", "lat": -11.935, "lon": -76.690}
+}
