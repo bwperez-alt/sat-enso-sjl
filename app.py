@@ -42,7 +42,38 @@ st.markdown(
 cfg = datos.leer_json("config.json")
 sectores = datos.leer_json("sectores.json")
 
-with st.spinner("Consultando pronósticos y estado ENSO…"):
+from concurrent.futures import ThreadPoolExecutor
+
+try:  # adjunta el contexto de Streamlit a los hilos (evita advertencias)
+    from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+except Exception:  # noqa: BLE001
+    add_script_run_ctx = get_script_run_ctx = None
+
+
+def _en_paralelo(tareas: dict) -> dict:
+    """Ejecuta las consultas a la vez: la primera carga tarda lo que la más lenta, no la suma."""
+    ctx = get_script_run_ctx() if get_script_run_ctx else None
+
+    def envolver(f):
+        def run():
+            if ctx is not None and add_script_run_ctx:
+                import threading
+                add_script_run_ctx(threading.current_thread(), ctx)
+            return f()
+        return run
+
+    with ThreadPoolExecutor(max_workers=len(tareas)) as ex:
+        futuros = {k: ex.submit(envolver(f)) for k, f in tareas.items()}
+        return {k: fut.result() for k, fut in futuros.items()}
+
+
+with st.spinner("Consultando pronósticos y estado de El Niño…"):
+    vivos = _en_paralelo({
+        "lluvia": lambda: datos.lluvia_pronostico(cfg),
+        "caudal": lambda: datos.caudal_pronostico(cfg),
+        "noaa": datos.enso_noaa,
+        "limite": datos.limite_distrital,
+    })
     payload = {
         "version": 3,
         "generado": datos.ahora_lima().strftime("%Y-%m-%d %H:%M"),
@@ -50,10 +81,7 @@ with st.spinner("Consultando pronósticos y estado ENSO…"):
         "hoy": datos.ahora_lima().strftime("%Y-%m-%d"),
         "config": cfg,
         "sectores": sectores,
-        "lluvia": datos.lluvia_pronostico(cfg),
-        "caudal": datos.caudal_pronostico(cfg),
-        "noaa": datos.enso_noaa(),
-        "limite": datos.limite_distrital(),
+        **vivos,
     }
 
 plantilla = (Path(__file__).parent / "index.html").read_text(encoding="utf-8")
@@ -61,7 +89,8 @@ datos_js = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 html = plantilla.replace("/*__DATA__*/null", datos_js, 1)
 
 if hasattr(st, "iframe"):
-    st.iframe(html, height=2000)
+    # "content": el marco se ajusta a la altura del contenido (clave en celulares)
+    st.iframe(html, height="content")
 else:  # versiones antiguas de Streamlit
     import streamlit.components.v1 as components
 

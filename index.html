@@ -388,7 +388,7 @@ function compute(){
 var map=null,secLayer=null;
 function initMap(){
   if(typeof L==="undefined"){$("map").innerHTML='<div class="muted" style="padding:20px">No se pudo cargar el mapa.</div>';return;}
-  map=L.map("map",{zoomControl:true}).setView([-11.955,-76.985],13);
+  map=L.map("map",{zoomControl:true,scrollWheelZoom:false}).setView([-11.955,-76.985],13);
   var sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Imagen © Esri, Maxar, Earthstar Geographics"});
   var topo=L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)"});
   var osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"});
