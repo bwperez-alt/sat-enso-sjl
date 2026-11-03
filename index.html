@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAT ENSO – Huaicos, Deslizamientos e Inundación · San Juan de Lurigancho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1720; --panel:#151f2b; --panel2:#1b2735; --line:#2a3a4d; --grid:#25313f;
+  --t1:#eef2f6; --t2:#b6c2cf; --t3:#7f8fa1; --accent:#4ea1ff;
+  --bajo:#0ca30c; --amarilla:#fab219; --medio:#ec835a; --alto:#d03b3b; --critico:#8e1b3a;
+  --land:#1a2633; --land2:#213041;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t1);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px}
+a{color:var(--accent)}
+.app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+main{padding:18px 22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+h1{font-size:17px;line-height:1.3;margin:0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin:0 0 8px;font-weight:600}
+.brand{display:flex;gap:10px;align-items:flex-start}
+.brand svg{flex:none}
+label{display:block;font-size:12px;color:var(--t2);margin:8px 0 4px}
+input[type=date],select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--t1);border-radius:6px;padding:7px 8px;font:inherit;color-scheme:dark}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.val{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--t1)}
+.row{display:flex;justify-content:space-between;align-items:baseline}
+.box{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.muted{color:var(--t3);font-size:12px;line-height:1.45}
+.toggle{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.toggle button{flex:1;background:none;border:0;color:var(--t2);padding:7px 4px;font:inherit;font-size:12px;cursor:pointer}
+.toggle button.on{background:var(--accent);color:#06121f;font-weight:600}
+.author{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;background:#2b3f57;display:grid;place-items:center;font-weight:700;color:#cfe3ff;flex:none}
+.li{display:inline-flex;align-items:center;gap:5px;font-size:12px;text-decoration:none;border:1px solid var(--line);border-radius:5px;padding:3px 7px;margin-top:4px;color:var(--t1)}
+.li:hover{border-color:var(--accent)}
+.enso-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.top p{margin:4px 0 0;color:var(--t2);max-width:760px;line-height:1.45}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi .n{font-size:26px;font-weight:700;line-height:1.1}
+.kpi .l{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:6px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+#map{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--t2);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lvl{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--t3);font-size:12px;border-bottom:1px solid var(--line);padding:6px 6px}
+td{padding:7px 6px;border-bottom:1px solid var(--grid)}
+td:last-child,th:last-child{white-space:nowrap}
+tr.sel td{background:#1f3047}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:#1a2a3d}
+.num{font-family:"IBM Plex Mono",monospace;text-align:right}
+.chart{width:100%;height:auto;display:block}
+.tip{position:fixed;pointer-events:none;background:#0b121a;border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);z-index:10;display:none;max-width:260px;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.disc{border-left:3px solid var(--amarilla)}
+details summary{cursor:pointer;color:var(--t1);font-weight:600}
+details p,details li{color:var(--t2);line-height:1.5}
+.sector-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
+.chip{font-size:12px;color:var(--t2);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+footer{color:var(--t3);font-size:12px;line-height:1.5}
+@media (max-width:1100px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:760px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3 L31 29 H3 Z" fill="none" stroke="#fab219" stroke-width="2.4" stroke-linejoin="round"/><path d="M8 24 q4.5-4 9 0 t9 0" fill="none" stroke="#4ea1ff" stroke-width="2.2" stroke-linecap="round"/><circle cx="17" cy="14" r="2" fill="#fab219"/></svg>
+    <h1>Sistema de Alerta Temprana de Huaicos, Deslizamientos e Inundación (ENSO) — San Juan de Lurigancho</h1>
+  </div>
+
+  <div>
+    <h2>Filtros por fechas</h2>
+    <label for="d0">Fecha inicial</label>
+    <input type="date" id="d0">
+    <label for="d1">Fecha de proyección</label>
+    <input type="date" id="d1">
+  </div>
+
+  <div>
+    <h2>Escenario ENSO (ENFEN)</h2>
+    <select id="enso" aria-label="Estado del sistema de alerta ENFEN"></select>
+    <div class="muted" id="icenTxt" style="margin-top:6px"></div>
+  </div>
+
+  <div>
+    <h2>Modo de cálculo</h2>
+    <div class="toggle" role="tablist">
+      <button id="mProy" class="on">Proyección estacional</button>
+      <button id="mEvt">Simular evento</button>
+    </div>
+    <div id="evtBox" style="display:none">
+      <label for="r24">Lluvia 24 h en cuenca alta del Rímac <span class="val" id="r24v"></span></label>
+      <input type="range" id="r24" min="0" max="60" step="1" value="18">
+      <label for="r72">Lluvia acumulada 72 h <span class="val" id="r72v"></span></label>
+      <input type="range" id="r72" min="0" max="120" step="1" value="35">
+      <label for="q">Caudal del Rímac en Chosica <span class="val" id="qv"></span></label>
+      <input type="range" id="q" min="10" max="250" step="5" value="95">
+    </div>
+  </div>
+
+  <div>
+    <div class="row"><label for="minR" style="margin:0">Índice de riesgo mínimo</label><span class="val" id="minRv"></span></div>
+    <input type="range" id="minR" min="0" max="0.8" step="0.05" value="0">
+  </div>
+
+  <div class="box">
+    <div class="author">
+      <div class="avatar">BP</div>
+      <div>
+        <div class="muted" style="font-size:11px">Autor</div>
+        <div style="font-weight:600">Perez Flores Brandon W.</div>
+        <a class="li" id="liLink" href="https://www.linkedin.com/in/brandon-perez-flores/" target="_blank" rel="noopener">
+          <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2 style="margin-bottom:6px">Estado ENSO (referencia)</h2>
+    <div class="enso-pill"><span class="dot" style="background:var(--alto)"></span><span><b>ENFEN:</b> Alerta de El Niño Costero</span></div>
+    <p class="muted" style="margin:6px 0 0">Según los comunicados oficiales de 2026, el evento se proyecta hasta el verano 2027 con magnitud moderada a fuerte. Verifique siempre el último comunicado en <a href="https://enfen.imarpe.gob.pe/" target="_blank" rel="noopener">enfen.imarpe.gob.pe</a>.</p>
+  </div>
+
+  <div class="box disc">
+    <p class="muted" style="margin:0"><b style="color:var(--t1)">Importante:</b> herramienta <b style="color:var(--t1)">indicativa y educativa</b>. No sustituye los avisos del SENAMHI, los comunicados del ENFEN ni las alertas del INDECI, CENEPRED o la Municipalidad de SJL.</p>
+  </div>
+</aside>
+
+<main>
+  <div class="top">
+    <div>
+      <h2 style="margin:0">Monitoreo ENSO · Lima Este</h2>
+      <p>El mapa y los gráficos muestran, para cada sector de quebrada, ladera o ribera, el <b>peor escenario</b> (mayor riesgo) dentro de las fechas elegidas. El riesgo combina el peligro (lluvia en la cuenca alta y caudal del Rímac, modulados por El Niño costero) con la susceptibilidad y la vulnerabilidad de cada sector.</p>
+    </div>
+    <div class="chip" id="rangeChip"></div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Mapa de alerta por sector</h2>
+      <svg id="map" viewBox="0 0 470 600" role="img" aria-label="Mapa esquemático de San Juan de Lurigancho con sectores coloreados por nivel de riesgo"></svg>
+      <div class="legend" id="legend"></div>
+      <div class="muted" style="margin-top:6px">Límite distrital simplificado y cauces esquemáticos; ubicaciones de sectores aproximadas, solo referenciales.</div>
+    </div>
+    <div class="card">
+      <h2>Ranking de sectores</h2>
+      <table>
+        <thead><tr><th>Sector</th><th>Tipo</th><th class="num">Riesgo</th><th>Nivel</th><th>Fecha pico</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="detail">
+    <div class="sector-head">
+      <div>
+        <h2 style="margin:0 0 2px">Detalle del sector</h2>
+        <div style="font-size:16px;font-weight:600" id="dName"></div>
+      </div>
+      <div id="dLvl"></div>
+    </div>
+    <div class="chips" id="dChips"></div>
+    <div class="muted" id="dNote" style="margin-bottom:8px"></div>
+    <div class="grid2" style="gap:12px">
+      <div><div class="muted" style="margin-bottom:2px">Índice de riesgo diario (0–1)</div><svg class="chart" id="cRisk" viewBox="0 0 520 210"></svg></div>
+      <div><div class="muted" style="margin-bottom:2px">Lluvia 24 h estimada en la cuenca alta (mm)</div><svg class="chart" id="cRain" viewBox="0 0 520 210"></svg></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Metodología, fuentes y cómo conectar datos reales</summary>
+      <p><b>Riesgo = Peligro × Vulnerabilidad</b>, siguiendo el enfoque del CENEPRED. Para cada día:</p>
+      <ul>
+        <li><b>Detonante por lluvia</b> (Hr): combina la lluvia de 24 h y la acumulada de 72 h en la cuenca alta del Rímac (estaciones de referencia: Matucana, San José de Parac, Santa Eulalia). Umbrales referenciales: 4–30 mm/24 h y 10–60 mm/72 h.</li>
+        <li><b>Detonante fluvial</b> (Hq): caudal del Rímac en la estación Chosica. Umbrales referenciales: 50–160 m³/s.</li>
+        <li><b>Peligro del sector</b> = susceptibilidad × mezcla de detonantes según tipo: <i>quebrada</i> (75 % lluvia, 25 % caudal), <i>ladera</i> (100 % lluvia), <i>ribera</i> (30 % lluvia, 70 % caudal).</li>
+        <li><b>Riesgo</b> = peligro × (0,5 + 0,5 × vulnerabilidad) × 1,25, acotado entre 0 y 1. Niveles: Bajo &lt; 0,20 · Alerta amarilla 0,20–0,40 · Medio 0,40–0,60 · Alto 0,60–0,80 · Crítico ≥ 0,80.</li>
+        <li><b>Modo proyección:</b> la lluvia y el caudal diarios se generan a partir de una climatología mensual referencial de la cuenca alta, multiplicada por un factor según el estado ENFEN, con una variación diaria reproducible. <b>No son datos observados.</b></li>
+      </ul>
+      <p><b>Fuentes oficiales para alimentar el modelo:</b> ENFEN (comunicados e ICEN) · SENAMHI (pronósticos, avisos meteorológicos y estaciones hidrometeorológicas del Rímac) · INGEMMET (zonas críticas por peligros geológicos) · CENEPRED–SIGRID (escenarios de riesgo por lluvias) · INEI (población y viviendas por manzana) · INDECI–SINPAD (registro de emergencias para calibrar umbrales).</p>
+      <p><b>Para pasar a datos reales:</b> reemplazar la serie generada por los pronósticos diarios de SENAMHI, cargar la susceptibilidad desde las capas del INGEMMET/SIGRID, calcular la vulnerabilidad con datos del INEI y calibrar los umbrales con los huaicos registrados en 2017 y 2023.</p>
+      <p class="muted">Adaptación metodológica inspirada en el Sistema de Alerta Temprana y Riesgo de Inundación (ENSO) Costa Ecuatoriana de Raúl Acevedo.</p>
+    </details>
+  </div>
+
+  <footer>© Perez Flores Brandon W. · Prototipo educativo de alerta temprana para San Juan de Lurigancho, Lima, Perú. Los valores mostrados son simulaciones referenciales.</footer>
+</main>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+(function(){
+"use strict";
+// ---------- Datos ----------
+var BOUNDARY=[[-76.93137,-11.94217],[-76.9694,-11.99493],[-76.95311,-12.02226],[-77.00954,-12.03087],[-77.01261,-12.03732],[-77.03065,-11.99639],[-77.02828,-11.96068],[-76.98795,-11.89715],[-76.94228,-11.86087],[-76.91211,-11.88927],[-76.93137,-11.94217]];
+var RIMAC=[[-76.885,-12.003],[-76.915,-12.012],[-76.94,-12.016],[-76.953,-12.0223],[-76.98,-12.027],[-77.0095,-12.0309],[-77.0126,-12.0373],[-77.03,-12.043]];
+var CANTO=[[-76.948,-11.872],[-76.957,-11.905],[-76.968,-11.93],[-76.982,-11.955],[-76.99,-11.98],[-76.995,-12.005],[-77.0,-12.028]];
+var HUAYCO=[[-76.895,-11.915],[-76.905,-11.95],[-76.915,-11.98],[-76.93,-12.0],[-76.94,-12.016]];
+var TIPOS={quebrada:"Quebrada",ladera:"Ladera",ribera:"Ribera"};
+var SECT=[
+ {id:"jic",n:"Jicamarca – Alto Canto Grande",lat:-11.895,lon:-76.952,t:"quebrada",s:0.92,v:0.82,note:"Cabecera de la quebrada Canto Grande; viviendas en el cauce y conos de deyección."},
+ {id:"mca",n:"Mariscal Cáceres",lat:-11.925,lon:-76.966,t:"ladera",s:0.82,v:0.80,note:"Asentamientos en laderas empinadas con material suelto y muros pirca."},
+ {id:"mon",n:"Montenegro",lat:-11.937,lon:-76.998,t:"ladera",s:0.72,v:0.76,note:"Laderas del flanco oeste; caída de rocas y flujos menores."},
+ {id:"bay",n:"Bayóvar",lat:-11.951,lon:-76.987,t:"ladera",s:0.74,v:0.74,note:"Expansión urbana sobre pendientes; drenaje pluvial limitado."},
+ {id:"hua",n:"Huáscar – Cruz de Motupe",lat:-11.957,lon:-76.965,t:"ladera",s:0.70,v:0.72,note:"Laderas del flanco este con viviendas autoconstruidas."},
+ {id:"jp2",n:"Juan Pablo II – ladera oeste",lat:-11.965,lon:-77.016,t:"ladera",s:0.66,v:0.70,note:"Quebradas secundarias del flanco oeste hacia el valle."},
+ {id:"cgm",n:"Canto Grande – cauce medio",lat:-11.975,lon:-76.988,t:"quebrada",s:0.76,v:0.64,note:"Tramo urbano del cauce; el flujo puede encauzarse por avenidas."},
+ {id:"dco",n:"10 de Octubre – San Hilarión",lat:-11.985,lon:-76.972,t:"ladera",s:0.60,v:0.60,note:"Laderas medias con vías empinadas que conducen escorrentía."},
+ {id:"man",n:"Mangomarca",lat:-12.003,lon:-76.983,t:"ladera",s:0.56,v:0.56,note:"Cerros del sector sur; riesgo moderado de deslizamientos."},
+ {id:"cam",n:"Campoy – ribera del Rímac",lat:-12.016,lon:-76.964,t:"ribera",s:0.72,v:0.66,note:"Margen derecha del Rímac; recibe el aporte de la quebrada Huaycoloro aguas arriba."},
+ {id:"zar",n:"Zárate – ribera del Rímac",lat:-12.025,lon:-76.998,t:"ribera",s:0.62,v:0.52,note:"Ribera urbana; erosión de márgenes y desborde en caudales altos."},
+ {id:"caj",n:"Caja de Agua – Chacarilla de Otero",lat:-12.021,lon:-77.016,t:"ladera",s:0.50,v:0.55,note:"Laderas del extremo suroeste del distrito."}
+];
+var ENSO=[
+ {k:"nina",n:"La Niña costera",f:0.85,icen:"ICEN < −1,0"},
+ {k:"na",n:"No activo (condiciones neutras)",f:1.0,icen:"ICEN entre −1,0 y 0,4"},
+ {k:"vig",n:"Vigilancia de El Niño costero",f:1.1,icen:"Probabilidad creciente de condiciones cálidas"},
+ {k:"deb",n:"Alerta – El Niño costero débil",f:1.25,icen:"ICEN 0,4 a 1,0"},
+ {k:"mod",n:"Alerta – El Niño costero moderado",f:1.5,icen:"ICEN 1,0 a 1,7"},
+ {k:"fue",n:"Alerta – El Niño costero fuerte",f:1.9,icen:"ICEN 1,7 a 3,0"},
+ {k:"ext",n:"Alerta – El Niño costero extraordinario",f:2.6,icen:"ICEN > 3,0 (ej. 1997-98)"}
+];
+// Climatología referencial (mm/mes cuenca alta; m3/s Chosica)
+var PCLIM=[60,80,75,20,3,0.5,0.3,1,3,8,12,35];
+var QCLIM=[60,85,90,45,25,18,16,15,15,16,20,32];
+var LV=[
+ {k:"bajo",n:"Bajo",c:"var(--bajo)",hex:"#0ca30c",ic:"●",min:0},
+ {k:"amarilla",n:"Alerta amarilla",c:"var(--amarilla)",hex:"#fab219",ic:"▲",min:0.2},
+ {k:"medio",n:"Medio (deslizamiento)",c:"var(--medio)",hex:"#ec835a",ic:"◆",min:0.4},
+ {k:"alto",n:"Alto riesgo",c:"var(--alto)",hex:"#d03b3b",ic:"■",min:0.6},
+ {k:"critico",n:"Crítico",c:"var(--critico)",hex:"#8e1b3a",ic:"✖",min:0.8}
+];
+function level(r){for(var i=LV.length-1;i>=0;i--){if(r>=LV[i].min)return LV[i];}return LV[0];}
+function badge(r){var l=level(r);var fg=(l.k==="amarilla")?"#0b0b0b":"#fff";return '<span class="lvl" style="background:'+l.hex+';color:'+fg+'">'+l.ic+' '+l.n+'</span>';}
+
+// ---------- Estado ----------
+var st={mode:"proy",enso:"mod",sel:"jic",minR:0};
+var $=function(id){return document.getElementById(id);};
+var today=new Date(2026,10,3);
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function parse(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+$("d0").value=iso(today);$("d1").value="2027-03-31";
+ENSO.forEach(function(e){var o=document.createElement("option");o.value=e.k;o.textContent=e.n;if(e.k===st.enso)o.selected=true;$("enso").appendChild(o);});
+
+// ---------- Modelo ----------
+function hash(n){var x=Math.sin(n*12.9898+78.233)*43758.5453;return x-Math.floor(x);}
+function clamp(x){return Math.max(0,Math.min(1,x));}
+function dayKey(d){return d.getFullYear()*400+d.getMonth()*31+d.getDate();}
+function rain24(d,f){
+  var m=d.getMonth();var mean=PCLIM[m]/30*f;var u=hash(dayKey(d));
+  var g=-Math.log(1-Math.min(u,0.995));           // exponencial, media 1
+  var wet=hash(dayKey(d)+7)<(0.35+0.25*(f-1));     // ¿día con lluvia?
+  return wet?mean*Math.min(g,3.2)*1.5:mean*0.15*g;
+}
+function series(d0,d1,f){
+  var out=[];var pre=[];var d=new Date(d0);d.setDate(d.getDate()-2);
+  while(d<=d1){
+    var r=rain24(d,f);pre.push(r);
+    if(d>=d0){
+      var n=pre.length;var r72=pre[n-1]+(pre[n-2]||0)+(pre[n-3]||0);
+      var q=QCLIM[d.getMonth()]*(1+0.6*(f-1))+1.0*r72;
+      out.push({d:new Date(d),r24:r,r72:r72,q:q});
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+function hazards(r24,r72,q){
+  var hr=clamp(0.6*(r24-4)/26+0.4*(r72-10)/50);
+  var hq=clamp((q-50)/110);
+  return {hr:hr,hq:hq};
+}
+function risk(s,h){
+  var mix=s.t==="quebrada"?0.75*h.hr+0.25*h.hq:(s.t==="ladera"?h.hr:0.3*h.hr+0.7*h.hq);
+  return clamp(s.s*mix*(0.5+0.5*s.v)*1.25);
+}
+function compute(){
+  var e=ENSO.filter(function(x){return x.k===st.enso;})[0];
+  var d0=parse($("d0").value),d1=parse($("d1").value);
+  if(d1<d0){var t=d0;d0=d1;d1=t;}
+  var res={e:e,d0:d0,d1:d1,days:[],sect:{}};
+  if(st.mode==="proy"){
+    res.days=series(d0,d1,e.f);
+  }else{
+    var r24=+$("r24").value,r72=Math.max(+$("r72").value,r24),q=+$("q").value;
+    var f=e.f;
+    res.days=[{d:d0,r24:r24*f,r72:r72*f,q:q*(1+0.3*(f-1))}];
+  }
+  SECT.forEach(function(s){
+    var arr=res.days.map(function(x){return risk(s,hazards(x.r24,x.r72,x.q));});
+    var mx=0,mi=0;arr.forEach(function(v,i){if(v>mx){mx=v;mi=i;}});
+    res.sect[s.id]={arr:arr,max:mx,peak:res.days[mi]?res.days[mi].d:d0};
+  });
+  return res;
+}
+
+// ---------- Mapa ----------
+var X0=-77.045,X1=-76.88,Y0=-11.85,Y1=-12.05,W=470,H=600;
+var kx=Math.cos(12*Math.PI/180);
+var sc=Math.min(W/((X1-X0)*kx),H/(Y0-Y1));
+function px(lon){return (lon-X0)*kx*sc;}
+function py(lat){return (Y0-lat)*sc;}
+function path(pts,close){return pts.map(function(p,i){return (i?"L":"M")+px(p[0]).toFixed(1)+","+py(p[1]).toFixed(1);}).join("")+(close?"Z":"");}
+function smooth(pts){ // Catmull-Rom → Bézier
+  var P=pts.map(function(p){return [px(p[0]),py(p[1])];});var s="M"+P[0][0].toFixed(1)+","+P[0][1].toFixed(1);
+  for(var i=0;i<P.length-1;i++){var p0=P[i-1]||P[i],p1=P[i],p2=P[i+1],p3=P[i+2]||p2;
+    s+="C"+(p1[0]+(p2[0]-p0[0])/6).toFixed(1)+","+(p1[1]+(p2[1]-p0[1])/6).toFixed(1)+" "+(p2[0]-(p3[0]-p1[0])/6).toFixed(1)+","+(p2[1]-(p3[1]-p1[1])/6).toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);}
+  return s;
+}
+function drawMap(res){
+  var svg=$("map");var h="";
+  h+='<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#22303f" stroke-width="2"/></pattern>'+
+     '<radialGradient id="glow"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>';
+  h+='<rect width="'+W+'" height="'+H+'" fill="url(#hatch)"/>';
+  h+='<path d="'+path(BOUNDARY,true)+'" fill="var(--land2)" stroke="#e8c15a" stroke-width="2" stroke-linejoin="round"/>';
+  h+='<path d="'+smooth(HUAYCO)+'" fill="none" stroke="#7a6a4a" stroke-width="2" stroke-dasharray="5 4"/>';
+  h+='<path d="'+smooth(CANTO)+'" fill="none" stroke="#9c845a" stroke-width="2.5" stroke-dasharray="6 4"/>';
+  h+='<path d="'+smooth(RIMAC)+'" fill="none" stroke="#3d8fe0" stroke-width="4" stroke-linecap="round"/>';
+  h+='<text x="'+px(-76.905)+'" y="'+(py(-12.0)+26)+'" fill="#8fb9e6" font-size="12" font-style="italic">Río Rímac</text>';
+  h+='<text x="'+(px(-76.9)-6)+'" y="'+py(-11.91)+'" fill="#a99670" font-size="11" text-anchor="middle" font-style="italic">Qda. Huaycoloro</text>';
+  h+='<text x="'+(px(-76.968)-8)+'" y="'+py(-11.872)+'" fill="#bda577" font-size="11" text-anchor="end" font-style="italic">Qda. Canto Grande</text>';
+  h+='<text x="16" y="'+py(-11.862)+'" fill="#e8c15a" font-size="13" font-weight="700">SAN JUAN DE</text><text x="16" y="'+(py(-11.862)+16)+'" fill="#e8c15a" font-size="13" font-weight="700">LURIGANCHO</text>';
+  h+='<text x="'+px(-76.9)+'" y="'+py(-12.035)+'" fill="#7f8fa1" font-size="11" text-anchor="middle">Lurigancho-Chosica</text>';
+  h+='<text x="'+px(-77.0)+'" y="'+(py(-12.04)+20)+'" fill="#7f8fa1" font-size="11">El Agustino / Rímac</text>';
+  // norte y escala
+  h+='<g transform="translate('+(W-30)+',34)"><path d="M0,-16 L7,6 L0,1 L-7,6Z" fill="#b6c2cf"/><text y="20" fill="#b6c2cf" font-size="11" text-anchor="middle">N</text></g>';
+  var L=2/(111.32*Math.cos(12*Math.PI/180))*kx*sc;
+  h+='<g transform="translate(20,'+(H-22)+')"><rect width="'+L+'" height="5" fill="#b6c2cf"/><rect width="'+(L/2)+'" height="5" fill="#4c5b6c"/><text y="-5" fill="#b6c2cf" font-size="11">0</text><text x="'+L+'" y="-5" fill="#b6c2cf" font-size="11" text-anchor="end">2 km</text></g>';
+  // sectores
+  var order=SECT.slice().sort(function(a,b){return res.sect[a.id].max-res.sect[b.id].max;});
+  order.forEach(function(s){
+    var r=res.sect[s.id].max;var l=level(r);var x=px(s.lon),y=py(s.lat);
+    var vis=r>=st.minR;var sel=s.id===st.sel;var rad=7+r*9;
+    h+='<g class="sec" data-id="'+s.id+'" style="cursor:pointer;opacity:'+(vis?1:0.18)+'">';
+    if(r>=0.6&&vis)h+='<circle cx="'+x+'" cy="'+y+'" r="'+(rad+10)+'" fill="'+l.hex+'" opacity=".22"><animate attributeName="r" values="'+(rad+4)+';'+(rad+14)+';'+(rad+4)+'" dur="2.4s" repeatCount="indefinite"/></circle>';
+    h+='<circle cx="'+x+'" cy="'+y+'" r="'+(rad+12)+'" fill="transparent"/>';
+    h+='<circle cx="'+x+'" cy="'+y+'" r="'+rad+'" fill="'+l.hex+'" stroke="'+(sel?"#fff":"#0f1720")+'" stroke-width="'+(sel?3:2)+'"/>';
+    if(s.t==="quebrada")h+='<path d="M'+(x-4)+','+(y-2)+' l4,5 l4,-5" fill="none" stroke="#fff" stroke-width="1.6"/>';
+    else if(s.t==="ribera")h+='<path d="M'+(x-4)+','+y+' q2,-3 4,0 t4,0" fill="none" stroke="#fff" stroke-width="1.6"/>';
+    else h+='<path d="M'+(x-4)+','+(y+3)+' L'+x+','+(y-3)+' L'+(x+4)+','+(y+3)+'" fill="none" stroke="#fff" stroke-width="1.6"/>';
+    if(sel||r>=0.6)h+='<text x="'+(x+rad+5)+'" y="'+(y+4)+'" fill="#eef2f6" font-size="11" font-weight="600" paint-order="stroke" stroke="#0f1720" stroke-width="3">'+s.n.split(" – ")[0]+'</text>';
+    h+='</g>';
+  });
+  svg.innerHTML=h;
+  Array.prototype.forEach.call(svg.querySelectorAll(".sec"),function(g){
+    var s=SECT.filter(function(x){return x.id===g.getAttribute("data-id");})[0];
+    g.addEventListener("mousemove",function(ev){var o=res.sect[s.id];showTip(ev,'<b>'+s.n+'</b><br>'+TIPOS[s.t]+' · riesgo máx. <b>'+o.max.toFixed(2)+'</b><br>'+level(o.max).n+'<br><span style="color:#7f8fa1">Pico: '+fmt(o.peak)+'</span>');});
+    g.addEventListener("mouseleave",hideTip);
+    g.addEventListener("click",function(){st.sel=s.id;render();});
+  });
+}
+
+// ---------- Gráficos ----------
+function fmt(d){return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short",year:"numeric"});}
+function fmtS(d){return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short"});}
+function lineChart(id,days,vals,opt){
+  var svg=$(id),W2=520,H2=210,m={l:40,r:12,t:10,b:28},iw=W2-m.l-m.r,ih=H2-m.t-m.b;
+  var n=vals.length,ymax=opt.ymax||Math.max(1,Math.max.apply(null,vals)*1.15);
+  var X=function(i){return m.l+(n<=1?iw/2:i*iw/(n-1));},Y=function(v){return m.t+ih-v/ymax*ih;};
+  var h="";
+  if(opt.bands){opt.bands.forEach(function(b){h+='<rect x="'+m.l+'" y="'+Y(b.hi)+'" width="'+iw+'" height="'+(Y(b.lo)-Y(b.hi))+'" fill="'+b.c+'" opacity=".07"/>';});}
+  var ticks=opt.ticks||[0,ymax/2,ymax];
+  ticks.forEach(function(t){h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(t)+'" y2="'+Y(t)+'" stroke="#25313f"/><text x="'+(m.l-6)+'" y="'+(Y(t)+4)+'" fill="#7f8fa1" font-size="11" text-anchor="end">'+(opt.tf?opt.tf(t):Math.round(t))+'</text>';});
+  h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#3a4a5d"/>';
+  var nl=Math.min(5,n);for(var k=0;k<nl;k++){var i=nl===1?0:Math.round(k*(n-1)/(nl-1));h+='<text x="'+X(i)+'" y="'+(H2-8)+'" fill="#7f8fa1" font-size="11" text-anchor="'+(k===0?"start":(k===nl-1?"end":"middle"))+'">'+fmtS(days[i].d)+'</text>';}
+  if(opt.type==="bar"){
+    var bw=Math.max(1,iw/n-2);
+    vals.forEach(function(v,i){var hh=Y(0)-Y(v);if(hh<0.5)return;h+='<path d="'+barPath(X(i)-bw/2,Y(v),bw,hh)+'" fill="'+opt.color+'"/>';});
+    if(opt.ref)opt.ref.forEach(function(r){h+='<line x1="'+m.l+'" x2="'+(m.l+iw)+'" y1="'+Y(r.v)+'" y2="'+Y(r.v)+'" stroke="'+r.c+'" stroke-dasharray="4 4"/><text x="'+(m.l+iw-2)+'" y="'+(Y(r.v)-4)+'" fill="#b6c2cf" font-size="10" text-anchor="end">'+r.t+'</text>';});
+  }else{
+    if(n===1){h+='<circle cx="'+X(0)+'" cy="'+Y(vals[0])+'" r="6" fill="'+opt.color+'"/>';}
+    else{var d=vals.map(function(v,i){return (i?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1);}).join("");h+='<path d="'+d+'" fill="none" stroke="'+opt.color+'" stroke-width="2" stroke-linejoin="round"/>';}
+  }
+  h+='<line id="'+id+'x" x1="0" x2="0" y1="'+m.t+'" y2="'+(m.t+ih)+'" stroke="#b6c2cf" stroke-dasharray="3 3" visibility="hidden"/><circle id="'+id+'d" r="5" fill="'+opt.color+'" stroke="#0f1720" stroke-width="2" visibility="hidden"/>';
+  h+='<rect x="'+m.l+'" y="'+m.t+'" width="'+iw+'" height="'+ih+'" fill="transparent" id="'+id+'h"/>';
+  svg.innerHTML=h;
+  var hit=$(id+"h"),cx=$(id+"x"),dot=$(id+"d");
+  hit.addEventListener("mousemove",function(ev){
+    var b=svg.getBoundingClientRect(),xr=(ev.clientX-b.left)*W2/b.width;var i=n<=1?0:Math.round((xr-m.l)/iw*(n-1));i=Math.max(0,Math.min(n-1,i));
+    cx.setAttribute("x1",X(i));cx.setAttribute("x2",X(i));cx.setAttribute("visibility","visible");
+    dot.setAttribute("cx",X(i));dot.setAttribute("cy",Y(vals[i]));dot.setAttribute("visibility","visible");
+    showTip(ev,'<b>'+fmt(days[i].d)+'</b><br>'+opt.tip(i));
+  });
+  hit.addEventListener("mouseleave",function(){cx.setAttribute("visibility","hidden");dot.setAttribute("visibility","hidden");hideTip();});
+}
+function barPath(x,y,w,h){var r=Math.min(3,w/2,h);return "M"+x+","+(y+h)+"V"+(y+r)+"Q"+x+","+y+" "+(x+r)+","+y+"H"+(x+w-r)+"Q"+(x+w)+","+y+" "+(x+w)+","+(y+r)+"V"+(y+h)+"Z";}
+
+// ---------- Tooltip ----------
+var tip=$("tip");
+function showTip(ev,html){tip.innerHTML=html;tip.style.display="block";var x=ev.clientX+14,y=ev.clientY+14;var w=tip.offsetWidth,h=tip.offsetHeight;if(x+w>innerWidth-8)x=ev.clientX-w-14;if(y+h>innerHeight-8)y=ev.clientY-h-14;tip.style.left=x+"px";tip.style.top=y+"px";}
+function hideTip(){tip.style.display="none";}
+
+// ---------- Render ----------
+function render(){
+  var res=compute();
+  $("icenTxt").textContent="Factor sobre la lluvia: ×"+res.e.f.toFixed(2).replace(".",",")+" · "+res.e.icen;
+  $("rangeChip").textContent=st.mode==="proy"?(fmt(res.d0)+" → "+fmt(res.d1)+" · "+res.days.length+" días"):"Evento simulado · "+fmt(res.d0);
+  $("minRv").textContent=st.minR.toFixed(2);
+  $("r24v").textContent=$("r24").value+" mm";$("r72v").textContent=Math.max(+$("r72").value,+$("r24").value)+" mm";$("qv").textContent=$("q").value+" m³/s";
+  // KPIs
+  var cnt={};LV.forEach(function(l){cnt[l.k]=0;});
+  SECT.forEach(function(s){cnt[level(res.sect[s.id].max).k]++;});
+  $("kpis").innerHTML=LV.slice().reverse().map(function(l){return '<div class="kpi"><div class="n">'+cnt[l.k]+'</div><div class="l"><span style="color:'+l.hex+'">'+l.ic+'</span>'+l.n+'</div></div>';}).join("");
+  $("legend").innerHTML=LV.slice().reverse().map(function(l){return '<span><span class="dot" style="background:'+l.hex+'"></span>'+l.n+'</span>';}).join("")+
+    '<span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#3d8fe0" stroke-width="3"/></svg>Río</span><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#9c845a" stroke-width="2" stroke-dasharray="5 3"/></svg>Quebrada</span>';
+  drawMap(res);
+  // Tabla
+  var rows=SECT.slice().sort(function(a,b){return res.sect[b.id].max-res.sect[a.id].max;});
+  $("tbody").innerHTML=rows.map(function(s){var o=res.sect[s.id];if(o.max<st.minR)return "";return '<tr data-id="'+s.id+'" class="'+(s.id===st.sel?"sel":"")+'"><td>'+s.n+'</td><td>'+TIPOS[s.t]+'</td><td class="num">'+o.max.toFixed(2)+'</td><td>'+badge(o.max)+'</td><td>'+fmtS(o.peak)+'</td></tr>';}).join("")||'<tr><td colspan="5" class="muted">Ningún sector supera el índice mínimo seleccionado.</td></tr>';
+  Array.prototype.forEach.call($("tbody").querySelectorAll("tr[data-id]"),function(tr){tr.addEventListener("click",function(){st.sel=tr.getAttribute("data-id");render();});});
+  // Detalle
+  var s=SECT.filter(function(x){return x.id===st.sel;})[0],o=res.sect[s.id];
+  $("dName").textContent=s.n;$("dLvl").innerHTML=badge(o.max);
+  $("dChips").innerHTML='<span class="chip">Tipo: '+TIPOS[s.t]+'</span><span class="chip">Susceptibilidad: '+s.s.toFixed(2)+'</span><span class="chip">Vulnerabilidad: '+s.v.toFixed(2)+'</span><span class="chip">Riesgo máx.: '+o.max.toFixed(2)+' ('+fmt(o.peak)+')</span>';
+  $("dNote").textContent=s.note;
+  var bands=[{lo:0,hi:.2,c:LV[0].hex},{lo:.2,hi:.4,c:LV[1].hex},{lo:.4,hi:.6,c:LV[2].hex},{lo:.6,hi:.8,c:LV[3].hex},{lo:.8,hi:1,c:LV[4].hex}];
+  lineChart("cRisk",res.days,o.arr,{ymax:1,ticks:[0,.2,.4,.6,.8,1],tf:function(t){return t.toFixed(1);},color:"#4ea1ff",bands:bands,
+    tip:function(i){return 'Riesgo: <b>'+o.arr[i].toFixed(2)+'</b> · '+level(o.arr[i]).n;}});
+  var rv=res.days.map(function(x){return x.r24;});
+  var rmax=Math.max(40,Math.ceil(Math.max.apply(null,rv)*1.1/10)*10);
+  lineChart("cRain",res.days,rv,{type:"bar",ymax:rmax,ticks:[0,rmax/4,rmax/2,rmax*3/4,rmax],color:"#4ea1ff",
+    ref:[{v:10,c:"#fab219",t:"10 mm"},{v:20,c:"#ec835a",t:"20 mm"},{v:30,c:"#d03b3b",t:"30 mm"}],
+    tip:function(i){var x=res.days[i];return 'Lluvia 24 h: <b>'+x.r24.toFixed(1)+' mm</b><br>Acum. 72 h: '+x.r72.toFixed(1)+' mm<br>Caudal Rímac: '+Math.round(x.q)+' m³/s';}});
+}
+
+// ---------- Eventos ----------
+["d0","d1","r24","r72","q"].forEach(function(id){$(id).addEventListener("input",render);});
+$("enso").addEventListener("change",function(){st.enso=this.value;render();});
+$("minR").addEventListener("input",function(){st.minR=+this.value;render();});
+$("mProy").addEventListener("click",function(){st.mode="proy";this.classList.add("on");$("mEvt").classList.remove("on");$("evtBox").style.display="none";render();});
+$("mEvt").addEventListener("click",function(){st.mode="evt";this.classList.add("on");$("mProy").classList.remove("on");$("evtBox").style.display="block";render();});
+render();
+})();
+</script>
+</body>
+</html>
