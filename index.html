@@ -262,7 +262,7 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
       <p><b>1. Nivel de riesgo de referencia (estático).</b> Siguiendo el enfoque del CENEPRED (riesgo = peligro × vulnerabilidad), cada sector tiene un índice de susceptibilidad y uno de vulnerabilidad entre 0 y 1. Su producto se clasifica en cuatro niveles: <b>Bajo</b> (&lt; 0,30), <b>Medio</b> (0,30–0,45), <b>Alto</b> (0,45–0,62) y <b>Muy alto</b> (≥ 0,62). <b>Los valores actuales son ilustrativos</b> y deben reemplazarse por la susceptibilidad del INGEMMET o del CENEPRED y por una vulnerabilidad calculada con exposición, fragilidad y resiliencia (dimensiones social, económica y ambiental).</p>
       <p><b>2. Intensidad del detonante (dinámica, por día).</b> Se compara la precipitación en las cabeceras de las quebradas Canto Grande y Huaycoloro con tres umbrales (U1, U2, U3), conceptualmente equivalentes a los percentiles P90, P95 y P99 del SENAMHI:</p>
       <ul>
-        <li>Intensidad máxima en 1 h, acumulado en 24 h y acumulado en 72 h; se toma el nivel más alto.</li>
+        <li>Intensidad máxima en 1 h, acumulado en 24 h y acumulado en 72 h, evaluados por separado en cada cabecera; se toma el nivel más alto.</li>
         <li>Si el índice de precipitación antecedente (IPA = Σ kⁱ·Pᵢ, k = 0,85, siete días previos a la ventana de 24 h) supera el umbral de saturación, los umbrales de 24 h se reducen un 20 %.</li>
         <li>En sectores de ribera se usa además el caudal diario del Rímac en Chosica (pronóstico GloFAS).</li>
       </ul>
@@ -333,7 +333,8 @@ try{(function(){
   }
   var nowIdx=D.ahora?L.horas.indexOf(D.ahora):-1;
   if(nowIdx<0){var nowD=new Date();for(var k=0;k<n;k++){if(t[k]<=nowD)nowIdx=k;}}
-  H={t:t,key:L.horas,pp:pp,hr:hr,tt:tt,so:so,nowIdx:nowIdx};
+  var porCab=cab.map(function(c){return L.puntos[c].pp.map(function(v){return v==null?0:v;});});
+  H={t:t,key:L.horas,pp:pp,hr:hr,tt:tt,so:so,nowIdx:nowIdx,cab:porCab,nombres:cab};
 })();}catch(e){H=null;console.error(e);}
 var QD={};if(D.caudal&&D.caudal.ok&&Array.isArray(D.caudal.fechas)&&Array.isArray(D.caudal.caudal)){D.caudal.fechas.forEach(function(f,i){if(D.caudal.caudal[i]!=null)QD[f]=D.caudal.caudal[i];});}
 
@@ -342,13 +343,19 @@ function rolling(arr,w,i){var s=0,c=0;for(var k=Math.max(0,i-w+1);k<=i;k++){if(a
 function resumenDias(nd){
   if(!H)return [];
   var daily={};H.t.forEach(function(d,i){var k=isoD(d);(daily[k]=daily[k]||[]).push(i);});
-  var sumDia=function(k){var a=daily[k];if(!a)return 0;var s=0;a.forEach(function(i){s+=H.pp[i]||0;});return s;};
   var out=[];
   for(var j=0;j<nd;j++){
     var d=new Date(today);d.setDate(d.getDate()+j);var k=isoD(d),idx=daily[k];if(!idx)break;
-    var i1=0,r24=0,r72=0;idx.forEach(function(i){i1=Math.max(i1,H.pp[i]||0);r24=Math.max(r24,rolling(H.pp,24,i)||0);r72=Math.max(r72,rolling(H.pp,72,i)||0);});
-    var ipa=0;for(var b=2;b<=8;b++){var dd=new Date(d);dd.setDate(dd.getDate()-b);ipa+=Math.pow(U.ipa_k,b-1)*sumDia(isoD(dd));} // excluye el día previo, ya incluido en la ventana de 24 h
-    out.push({d:d,k:k,i1:i1,r24:r24,r72:r72,ipa:ipa,q:QD[k]!=null?QD[k]:null});
+    // Cada cabecera se evalúa por separado; luego se toma el valor más desfavorable
+    var best=null;
+    H.cab.forEach(function(serie,c){
+      var sumDia=function(kk){var a=daily[kk];if(!a)return 0;var s=0;a.forEach(function(i){s+=serie[i];});return s;};
+      var i1=0,r24=0,r72=0;idx.forEach(function(i){i1=Math.max(i1,serie[i]);r24=Math.max(r24,rolling(serie,24,i)||0);r72=Math.max(r72,rolling(serie,72,i)||0);});
+      var ipa=0;for(var b=2;b<=8;b++){var dd=new Date(d);dd.setDate(dd.getDate()-b);ipa+=Math.pow(U.ipa_k,b-1)*sumDia(isoD(dd));}
+      var x={i1:i1,r24:r24,r72:r72,ipa:ipa,cab:H.nombres[c]};
+      if(!best||detPluvial(x)>detPluvial(best)||(detPluvial(x)===detPluvial(best)&&x.r24>best.r24))best=x;
+    });
+    out.push({d:d,k:k,i1:best.i1,r24:best.r24,r72:best.r72,ipa:best.ipa,cab:best.cab,q:QD[k]!=null?QD[k]:null});
   }
   return out;
 }
@@ -542,7 +549,7 @@ function render(){
       var r24=ts.map(function(_,i){return rolling(H.pp,24,i0+i);});
       chart("cB",ts,r24,{now:now,nice:function(v){return nice(Math.max(v,U.precipitacion_24h_mm[2]*1.1));},refs:[{v:U.precipitacion_24h_mm[0],c:"#fab219",t:"U1"},{v:U.precipitacion_24h_mm[1],c:"#f07a2b",t:"U2"},{v:U.precipitacion_24h_mm[2],c:"#d03b3b",t:"U3"}],tip:tipH});
     }
-    var dx=res.dias[0];$("ctxTxt").textContent="Hoy: intensidad máx. "+fN(dx.i1)+" mm/h · acumulado 24 h "+fN(dx.r24)+" mm · 72 h "+fN(dx.r72)+" mm · IPA "+fN(dx.ipa)+" mm"+(dx.ipa>=U.ipa_saturacion_mm?" (suelo húmedo: umbrales de 24 h reducidos)":"")+".";
+    var dx=res.dias[0];$("ctxTxt").textContent="Hoy ("+(dx.cab||"cabeceras")+"): intensidad máx. "+fN(dx.i1)+" mm/h · acumulado 24 h "+fN(dx.r24)+" mm · 72 h "+fN(dx.r72)+" mm · IPA "+fN(dx.ipa)+" mm"+(dx.ipa>=U.ipa_saturacion_mm?" (suelo húmedo: umbrales de 24 h reducidos)":"")+".";
   }else{
     chart("cA",[],[],{});chart("cB",[],[],{});$("cBtitle").textContent="";
     $("ctxTxt").textContent=st.mode==="evt"?"En el modo de escenario hipotético no se muestran series de tiempo.":"";
