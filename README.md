@@ -52,10 +52,18 @@ La plataforma separa dos conceptos:
 - **Sectores, susceptibilidad, vulnerabilidad y elementos expuestos:** `data/sectores.json`.
 - Al guardar en GitHub, Streamlit actualiza la plataforma automáticamente.
 
+## Actualización automática (GitHub Actions)
+El flujo `.github/workflows/actualizar-datos.yml` se ejecuta **cada hora** (minuto 17): consulta las fuentes con `actualizar_datos.py` y publica `vivo.json` en la rama `datos`. Al abrirse, la app lee ese archivo (carga rápida); si tiene más de 3 horas o no está disponible, consulta las fuentes en vivo.
+
+- Ejecutar a mano: pestaña **Actions → Actualizar datos → Run workflow**.
+- GitHub desactiva los flujos programados de repositorios públicos sin actividad durante 60 días; si ocurre, reactívelo desde la pestaña **Actions**.
+
 ## Estructura
 ```
 app.py                                # aplicación Streamlit
-datos.py                              # consulta de fuentes con caché y respaldo
+fuentes.py                            # consulta de fuentes (sin Streamlit)
+datos.py                              # caché, datos precalculados y respaldo en vivo
+actualizar_datos.py                   # precálculo horario (GitHub Actions)
 index.html                            # visor
 data/config.json                      # ENFEN, ICEN, umbrales, puntos de pronóstico
 data/sectores.json                    # sectores

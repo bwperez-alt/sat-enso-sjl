@@ -478,7 +478,9 @@ function renderStatic(){
   s+='<li><span class="ok">✔</span><span><b>ICEN y estado ENFEN:</b> actualización manual ('+esc((CFG.icen&&CFG.icen.mes)||"—")+')</span></li>';
   s+='<li>'+onoff(li)+'<span><b>Límite distrital:</b> '+(li?esc(li.fuente):"simplificado (respaldo)")+'</span></li>';
   $("srcList").innerHTML=s;
-  $("genTxt").textContent=D.generado?("Datos consultados: "+D.generado+" (hora de Lima)"):"";
+  var og=D.origen||{};
+  $("genTxt").textContent=og.generado?("Datos "+(og.tipo==="precalculado"?"actualizados automáticamente":"consultados en vivo")+": "+og.generado+" (hora de Lima)"):(D.generado?("Datos consultados: "+D.generado+" (hora de Lima)"):"");
+  if(og.tipo)$("srcList").innerHTML+='<li><span class="ok">✔</span><span><b>Actualización:</b> '+(og.tipo==="precalculado"?"automática cada hora (GitHub Actions)":"consulta en vivo")+'</span></li>';
   var sb='<p style="margin:0 0 8px">Más allá de 16 días los modelos no permiten pronosticar la lluvia día a día. Para la temporada de lluvias consulte el <b style="color:var(--t1)">pronóstico estacional del SENAMHI</b> (probabilidad de lluvias superiores, normales o inferiores a lo normal) y los <b style="color:var(--t1)">comunicados del ENFEN</b>.</p>';
   if(en.estado)sb+='<p style="margin:0 0 8px">Estado actual: <b style="color:var(--t1)">'+esc(en.estado)+'</b>'+(en.magnitud_esperada?'; magnitud esperada: '+esc(en.magnitud_esperada):'')+'. '+esc(en.resumen||"")+'</p>';
   sb+='<p style="margin:0">Para explorar consecuencias, use el modo <b style="color:var(--t1)">Escenario hipotético</b>.</p>';

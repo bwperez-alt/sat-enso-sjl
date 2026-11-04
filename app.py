@@ -68,13 +68,20 @@ def _en_paralelo(tareas: dict) -> dict:
 
 
 with st.spinner("Consultando pronósticos y estado de El Niño…"):
-    vivos = _en_paralelo({
-        "lluvia": lambda: datos.lluvia_pronostico(cfg),
-        "caudal": lambda: datos.caudal_pronostico(cfg),
-        "noaa": datos.enso_noaa,
-        "limite": datos.limite_distrital,
-    })
+    pre = datos.precalculados()
+    if pre:  # datos preparados cada hora por GitHub Actions: carga rápida
+        vivos = {k: pre[k] for k in ("lluvia", "caudal", "noaa", "limite")}
+        origen = {"tipo": "precalculado", "generado": pre.get("generado_lima")}
+    else:  # respaldo: consulta en vivo
+        vivos = _en_paralelo({
+            "lluvia": lambda: datos.lluvia_pronostico(cfg),
+            "caudal": lambda: datos.caudal_pronostico(cfg),
+            "noaa": datos.enso_noaa,
+            "limite": datos.limite_distrital,
+        })
+        origen = {"tipo": "en vivo", "generado": datos.ahora_lima().strftime("%Y-%m-%d %H:%M")}
     payload = {
+        "origen": origen,
         "version": 3,
         "generado": datos.ahora_lima().strftime("%Y-%m-%d %H:%M"),
         "ahora": datos.ahora_lima().strftime("%Y-%m-%dT%H:00"),
