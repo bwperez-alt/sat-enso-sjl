@@ -106,6 +106,7 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
 .mbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;max-width:560px;width:100%}
 .mbox canvas{width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;background:#fff}
 .leaflet-popup-content{color:#0b121a;font-size:12px}
+.oftab td:last-child{white-space:normal}
 </style>
 </head>
 <body>
@@ -284,7 +285,7 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
         <thead><tr><th>Detonante \ Riesgo</th><th>Bajo</th><th>Medio</th><th>Alto</th><th>Muy alto</th></tr></thead>
         <tbody id="mtx"></tbody>
       </table>
-      <p><b>4. Elementos expuestos (estimación mensual).</b> Para cada sector se estima la población y las edificaciones dentro de un círculo (300 m en quebradas y laderas, 250 m en riberas). La población proviene de la grilla de 100 m de WorldPop, ajustada para que el total del distrito coincida con la población censada del INEI (Censos Nacionales 2025: 1 124 925 habitantes); las edificaciones, de las huellas de edificaciones de Microsoft. Además se descargan las áreas críticas oficiales publicadas por el CENEPRED (SIGRID) y el INGEMMET y se indica si cada sector se superpone con ellas. Son cifras de <b>exposición</b>, no de daños: no predicen damnificados.</p>
+      <p><b>4. Elementos expuestos (estimación mensual).</b> Para cada sector se estima la población y las edificaciones dentro de un círculo (300 m en quebradas y laderas, 250 m en riberas). La población proviene de la grilla de 100 m de WorldPop, ajustada para que el total del distrito coincida con la población censada del INEI (Censos Nacionales 2025: 1 124 925 habitantes); las edificaciones, de las huellas detectadas por satélite (Microsoft), que <b>subestiman</b> el número de viviendas en zonas densas donde los techos se fusionan. Además se descargan las áreas críticas oficiales publicadas por el CENEPRED (SIGRID) y el INGEMMET y se indica si cada sector se superpone con ellas. Son cifras de <b>exposición</b>, no de daños: no predicen damnificados.</p>
       <p><b>Limitaciones.</b> Los umbrales son referenciales y deben calibrarse con el estudio del SENAMHI de umbrales de precipitación de la cuenca del Rímac, los umbrales hidrológicos oficiales de la estación Chosica y los eventos registrados por el INDECI (SINPAD) y el INGEMMET. Los modelos meteorológicos globales tienen resolución gruesa y pueden subestimar tormentas locales de corta duración, que son las que desencadenan huaicos en quebradas pequeñas. Los últimos 7 días corresponden al análisis del modelo, no a observaciones de estaciones. La humedad relativa, la temperatura y la humedad del suelo se muestran solo como contexto y no intervienen en el cálculo.</p>
       <p><b>Fuentes:</b> Open-Meteo (precipitación horaria, humedad, temperatura, humedad del suelo) · GloFAS / Copernicus vía Open-Meteo (caudal) · ENFEN e IGP (ICEN) · NOAA CPC (RONI/ONI) · OpenStreetMap (límite distrital) · Esri World Imagery · OpenTopoMap.</p>
       <p class="muted">Adaptación metodológica inspirada en el Sistema de Alerta Temprana y Riesgo de Inundación (ENSO) Costa Ecuatoriana de Raúl Acevedo.</p>
@@ -526,10 +527,12 @@ function renderStatic(){
   $("seasonBox").innerHTML=sb;
   var of=D.oficial,oh="";
   var dx=D.exposicion&&D.exposicion.distrito;
-  if(dx&&(dx.poblacion_en_areas_criticas!=null||dx.edificaciones_en_areas_criticas!=null)){
+  if(dx&&dx.poblacion_entorno_zonas_criticas!=null){
+    oh+='<div class="box" style="margin-bottom:10px;border-left:3px solid #ff5a5a"><div style="font-size:13px"><b>Entorno de las '+dx.zonas_criticas_ingemmet+' zonas críticas oficiales</b> (estimación, radio 250–300 m): ≈ '+fN(dx.poblacion_entorno_zonas_criticas,0)+' personas'+(dx.edificaciones_entorno_zonas_criticas!=null?' · '+fN(dx.edificaciones_entorno_zonas_criticas,0)+' edificaciones detectadas':'')+'</div><div class="muted">Contraste: el CENEPRED estimó 78 988 personas de SJL en riesgo muy alto por lluvias (escenario 2023-2024). Cálculo mensual: '+esc(D.exposicion.generado_lima||"")+'; población ajustada al Censo INEI 2025.</div></div>';
+  } else if(dx&&(dx.poblacion_en_areas_criticas!=null||dx.edificaciones_en_areas_criticas!=null)){
     oh+='<div class="box" style="margin-bottom:10px;border-left:3px solid #ff5a5a"><div style="font-size:13px"><b>En áreas críticas oficiales dentro de SJL</b> (estimación): ≈ '+(dx.poblacion_en_areas_criticas!=null?fN(dx.poblacion_en_areas_criticas,0)+' personas':'')+(dx.edificaciones_en_areas_criticas!=null?' · '+fN(dx.edificaciones_en_areas_criticas,0)+' edificaciones':'')+(dx.areas_criticas_poligonos?' · '+dx.areas_criticas_poligonos+' polígonos':'')+'</div><div class="muted">Cálculo mensual: '+esc(D.exposicion.generado_lima||"")+'. Población ajustada al Censo INEI 2025.</div></div>';
   }
-  if(of&&of.items){oh+='<table style="font-size:12.5px"><tbody>'+of.items.map(function(it){return '<tr style="cursor:default"><td style="width:24%;color:var(--t1);font-weight:600;vertical-align:top">'+esc(it.tema)+'</td><td style="vertical-align:top">'+esc(it.dato)+'<div class="muted"><a href="'+esc(it.url)+'" target="_blank" rel="noopener">'+esc(it.fuente)+'</a></div></td></tr>';}).join("")+'</tbody></table><div class="muted" style="margin-top:6px">Revisión de fuentes: '+esc(of.actualizado||"")+'.</div>';}
+  if(of&&of.items){oh+='<table class="oftab" style="font-size:12.5px"><tbody>'+of.items.map(function(it){return '<tr style="cursor:default"><td style="width:24%;color:var(--t1);font-weight:600;vertical-align:top">'+esc(it.tema)+'</td><td style="vertical-align:top">'+esc(it.dato)+'<div class="muted"><a href="'+esc(it.url)+'" target="_blank" rel="noopener">'+esc(it.fuente)+'</a></div></td></tr>';}).join("")+'</tbody></table><div class="muted" style="margin-top:6px">Revisión de fuentes: '+esc(of.actualizado||"")+'.</div>';}
   $("ofBox").innerHTML=oh||'<span class="muted">Sin datos.</span>';
   var mt="";for(var d=1;d<=3;d++){mt+='<tr><td>'+DET[d]+'</td>';for(var r=0;r<4;r++)mt+='<td>'+badgeA(MATRIZ[d][r])+'</td>';mt+='</tr>';}
   $("mtx").innerHTML=mt;
@@ -568,7 +571,7 @@ function render(){
   // Detalle
   var s=SECT.filter(function(x){return x.id===st.sel;})[0],o=res.sect[s.id];
   $("dName").textContent=s.nombre+(s.ambito==="influencia"?" (zona de influencia)":"");$("dLvl").innerHTML=badgeA(o.max);
-  var ee=expo(s),exTxt=ee&&ee.poblacion!=null?("≈ "+fN(ee.poblacion,0)+" personas"+(ee.edificaciones!=null?" · "+fN(ee.edificaciones,0)+" edificaciones":"")+" en "+ee.radio_m+" m (estimación)"):"en cálculo (actualización mensual)";
+  var ee=expo(s),exTxt=ee&&ee.poblacion!=null?("≈ "+fN(ee.poblacion,0)+" personas"+(ee.edificaciones!=null?" · "+fN(ee.edificaciones,0)+" edificaciones detectadas":"")+" en "+ee.radio_m+" m (estimación)"):"en cálculo (actualización mensual)";
   var acTxt=s.oficial?"":ee&&ee.en_area_critica!=null?'<span class="chip" style="'+(ee.en_area_critica?'border-color:#d03b3b;color:#ffb4b4':'')+'">Área crítica oficial: '+(ee.en_area_critica?"sí, se superpone":"no se superpone")+'</span>':"";
   $("dChips").innerHTML='<span class="chip">Tipo: '+TIPOS[s.tipo]+'</span><span class="chip">Riesgo de referencia: '+RIESGO[o.rl].n+'</span>'+(s.oficial?'<span class="chip" style="border-color:#ff5a5a;color:#ffb4b4">Zona crítica oficial INGEMMET N.° '+esc(s.num)+'</span><span class="chip">Vulnerabilidad aprox. por exposición: '+fN(s.vulnerabilidad,2)+'</span>':'<span class="chip">Susceptibilidad (ilustrativa): '+fN(s.susceptibilidad,2)+'</span><span class="chip">Vulnerabilidad (ilustrativa): '+fN(s.vulnerabilidad,2)+'</span>')+'<span class="chip">Expuestos: '+exTxt+'</span>'+acTxt;
   $("dNote").textContent=s.nota||"";
@@ -650,7 +653,7 @@ function drawFlyer(){
   pel.l.forEach(function(t){ctx.fillStyle="#4ea1ff";ctx.beginPath();ctx.arc(76,y-10,9,0,7);ctx.fill();ctx.fillStyle="#0b121a";y=wrap(ctx,t,102,y,920,39)+10;});
   // Expuestos (si hay datos)
   var ee=expo(s);
-  if(ee&&ee.poblacion!=null&&y<1000){y+=2;ctx.fillStyle="#475569";ctx.font="600 26px "+F;y=wrap(ctx,"Expuestos (estimación, radio "+ee.radio_m+" m): ≈ "+fN(ee.poblacion,0)+" personas"+(ee.edificaciones!=null?" y "+fN(ee.edificaciones,0)+" edificaciones":"")+(ee.en_area_critica?" · zona con área crítica oficial":""),60,y,960,34);}
+  if(ee&&ee.poblacion!=null&&y<1000){y+=2;ctx.fillStyle="#475569";ctx.font="600 26px "+F;y=wrap(ctx,"Expuestos (estimación, radio "+ee.radio_m+" m): ≈ "+fN(ee.poblacion,0)+" personas"+(s.oficial?" · zona crítica oficial INGEMMET":(ee.en_area_critica?" · zona con área crítica oficial":"")),60,y,960,34);}
   // Pie: emergencias + QR
   var fy=1040;ctx.fillStyle="#f1f5f9";ctx.fillRect(0,fy,W,H-fy);
   ctx.fillStyle="#0b121a";ctx.font="800 34px "+F;ctx.fillText("Emergencias",60,fy+60);

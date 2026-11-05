@@ -52,6 +52,14 @@ La plataforma separa dos conceptos:
 - **Sectores, susceptibilidad, vulnerabilidad y elementos expuestos:** `data/sectores.json`.
 - Al guardar en GitHub, Streamlit actualiza la plataforma automáticamente.
 
+## Datos oficiales y exposición (actualización mensual)
+- **Sectores:** zonas críticas oficiales del **INGEMMET** dentro de SJL (servicio GEOCATMIN), con paraje, tipo de peligro y boletín de origen. Respaldo: `data/sectores.json`.
+- **Población expuesta (estimación):** grilla de 100 m de **WorldPop**, ajustada al total del **Censo INEI 2025** (1 124 925 habitantes), en un radio de 300 m (quebradas y laderas) o 250 m (riberas).
+- **Edificaciones detectadas:** huellas de **Microsoft Global ML Building Footprints** (subestiman viviendas en zonas densas).
+- **Panel de datos oficiales:** `data/oficial.json` (INEI, CENEPRED, INGEMMET, INDECI, SENAMHI), con enlace a cada fuente.
+- Flujo `.github/workflows/actualizar-exposicion.yml` (día 3 de cada mes) → `exposicion.json` en la rama `datos`.
+- Son cifras de **exposición**, no de daños: no predicen damnificados.
+
 ## Actualización automática (GitHub Actions)
 El flujo `.github/workflows/actualizar-datos.yml` se ejecuta **cada hora** (minuto 17): consulta las fuentes con `actualizar_datos.py` y publica `vivo.json` en la rama `datos`. Al abrirse, la app lee ese archivo (carga rápida); si tiene más de 3 horas o no está disponible, consulta las fuentes en vivo.
 
@@ -64,6 +72,8 @@ app.py                                # aplicación Streamlit
 fuentes.py                            # consulta de fuentes (sin Streamlit)
 datos.py                              # caché, datos precalculados y respaldo en vivo
 actualizar_datos.py                   # precálculo horario (GitHub Actions)
+exposicion.py                         # exposición y zonas críticas oficiales (mensual)
+data/oficial.json                     # datos oficiales del distrito con fuentes
 index.html                            # visor
 data/config.json                      # ENFEN, ICEN, umbrales, puntos de pronóstico
 data/sectores.json                    # sectores
