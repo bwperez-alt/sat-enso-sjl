@@ -201,13 +201,29 @@ def _get(url, **kw):
 def areas_criticas():
     feats = []
     for fuente, base in SERVICIOS:
+        capas = []
         try:
             r = _get(base + "/layers", params={"f": "json"}, timeout=60)
-            r.raise_for_status()
-            capas = r.json().get("layers", [])
+            log(fuente, "/layers →", r.status_code, r.text[:300].replace("\n", " "))
+            capas = r.json().get("layers", []) if r.ok else []
         except Exception as e:  # noqa: BLE001
-            log(fuente, "sin catálogo de capas:", e)
-            continue
+            log(fuente, "/layers falló:", e)
+        if not capas:  # alternativa: listado del servicio y detalle de cada capa
+            try:
+                r = _get(base, params={"f": "json"}, timeout=60)
+                log(fuente, "servicio →", r.status_code, r.text[:300].replace("\n", " "))
+                for c in (r.json().get("layers", []) if r.ok else []):
+                    if c.get("subLayerIds"):
+                        continue
+                    try:
+                        info = _get(f"{base}/{c['id']}", params={"f": "json"}, timeout=40).json()
+                        capas.append({"id": c["id"], "name": info.get("name", c.get("name")),
+                                      "type": info.get("type"), "geometryType": info.get("geometryType")})
+                    except Exception as e:  # noqa: BLE001
+                        log(fuente, "capa", c.get("id"), "sin detalle:", e)
+            except Exception as e:  # noqa: BLE001
+                log(fuente, "sin catálogo de capas:", e)
+                continue
         for c in capas:
             log("  capa disponible:", fuente, c.get("id"), "|", c.get("name"), "|", c.get("type"), "|", c.get("geometryType"))
         for c in capas:
