@@ -1,0 +1,53 @@
+{
+ "actualizado": "2026-11-05",
+ "items": [
+  {
+   "tema": "Población",
+   "dato": "1 124 925 habitantes (2025) · 1 038 495 (2017) · crecimiento 1,0 % anual",
+   "fuente": "INEI, Censos Nacionales 2025 – resultados distritales (julio 2026)",
+   "url": "https://sistemas.inei.gob.pe/dir-segmentacion-ci/postcensal/prod/adjuntos/publicaciones/Presentacion_resultados.pdf"
+  },
+  {
+   "tema": "Población en riesgo muy alto por lluvias",
+   "dato": "78 988 personas en SJL ante inundaciones y flujos por activación de quebradas (escenario enero–marzo 2024)",
+   "fuente": "CENEPRED, Escenario de riesgo por inundaciones y flujos por activación de quebradas a nivel de cuencas de Lima Metropolitana (set. 2023)",
+   "url": "https://andina.pe/agencia/noticia-el-nino-riesgo-muy-alto-mas-230000-viviendas-lima-metropolitana-lluvias-954630.aspx"
+  },
+  {
+   "tema": "Movimientos en masa",
+   "dato": "320 ocurrencias y 27 áreas críticas en SJL; quebrada Media Luna entre las más vulnerables",
+   "fuente": "INGEMMET, boletín Peligro geológico por movimientos en masa en distritos de Lima Este (oct. 2025)",
+   "url": "https://proactivo.com.pe/?p=746791"
+  },
+  {
+   "tema": "Zonas críticas ante lluvias",
+   "dato": "8 zonas críticas en SJL en la plataforma Perú en Alerta (147 en Lima Metropolitana)",
+   "fuente": "INGEMMET, Perú en Alerta (oct. 2026)",
+   "url": "https://www.gob.pe/institucion/ingemmet/campa%C3%B1as/131812-peru-en-alerta"
+  },
+  {
+   "tema": "Zonas críticas ante El Niño 2023-2024",
+   "dato": "SJL entre los 4 distritos más críticos de Lima Metropolitana por ocupación de cauces y laderas",
+   "fuente": "INGEMMET, Informe Técnico A7459 (2023)",
+   "url": "https://sigrid.cenepred.gob.pe/sigridv3/documento/16933/descargar"
+  },
+  {
+   "tema": "Antecedente 2023 (ciclón Yaku)",
+   "dato": "14 de marzo de 2023: lluvias intensas activaron la quebrada Jicamarca y afectaron viviendas en SJL (SINPAD 167982)",
+   "fuente": "INDECI–COEN, Informe de emergencia N.° 599 (19/03/2023)",
+   "url": "https://www.mesadeconcertacion.org.pe/storage/documentos/2023-05-29/2-indeci-ddi-balance-lluvias-24-05-230.pdf"
+  },
+  {
+   "tema": "Antecedente 2017 (El Niño Costero)",
+   "dato": "Desborde del Huaycoloro: 18 familias damnificadas y 164 afectadas en SJL (Campoy)",
+   "fuente": "INDECI, reporte citado por EFE (marzo 2017)",
+   "url": "https://www.prensalibre.com/?p=369811"
+  },
+  {
+   "tema": "Umbrales de lluvia",
+   "dato": "El SENAMHI clasifica la lluvia diaria por percentiles: lluvioso (P90–P95), muy lluvioso (P95–P99) y extremadamente lluvioso (> P99)",
+   "fuente": "SENAMHI, Nota Técnica 001-2014",
+   "url": "https://www.senamhi.gob.pe/load/file/01402SENA-6.pdf"
+  }
+ ]
+}

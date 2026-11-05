@@ -88,6 +88,8 @@ with st.spinner("Consultando pronósticos y estado de El Niño…"):
         "hoy": datos.ahora_lima().strftime("%Y-%m-%d"),
         "config": cfg,
         "sectores": sectores,
+        "oficial": datos.leer_json("oficial.json"),
+        "exposicion": datos.exposicion(),
         **vivos,
     }
 

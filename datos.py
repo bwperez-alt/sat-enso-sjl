@@ -23,6 +23,7 @@ ahora_lima = fuentes.ahora_lima
 leer_json = fuentes.leer_json
 
 URL_PRECALCULADO = "https://raw.githubusercontent.com/bwperez-alt/sat-enso-sjl/datos/vivo.json"
+URL_EXPOSICION = "https://raw.githubusercontent.com/bwperez-alt/sat-enso-sjl/datos/exposicion.json"
 MAX_HORAS_PRECALCULADO = 3
 
 
@@ -60,5 +61,20 @@ def precalculados() -> dict | None:
         if not (d.get("lluvia") or {}).get("ok"):
             return None
         return d
+    except Exception:  # noqa: BLE001
+        return None
+
+
+@st.cache_data(ttl=6 * 3600, show_spinner=False)
+def _leer_exposicion() -> dict:
+    r = requests.get(URL_EXPOSICION, headers=fuentes.UA, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def exposicion() -> dict | None:
+    """Elementos expuestos por sector y áreas críticas oficiales (cálculo mensual)."""
+    try:
+        return _leer_exposicion()
     except Exception:  # noqa: BLE001
         return None

@@ -1,0 +1,45 @@
+name: Actualizar exposición
+
+# Una vez al mes: estima población y edificaciones expuestas por sector y descarga
+# las áreas críticas oficiales (CENEPRED/INGEMMET). Publica exposicion.json en la rama "datos".
+on:
+  schedule:
+    - cron: "41 6 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actualizar-datos
+  cancel-in-progress: false
+
+jobs:
+  exposicion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install requests numpy shapely pyproj rasterio
+
+      - name: Calcular exposición
+        run: python exposicion.py salida/exposicion.json
+
+      - name: Publicar en la rama "datos" (conservando vivo.json)
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/datos/vivo.json" -o salida/vivo.json || true
+          cd salida
+          git init -q -b datos
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Exposición $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" datos
