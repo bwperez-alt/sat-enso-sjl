@@ -85,7 +85,16 @@ class Grilla:
         import rasterio
         from rasterio.windows import from_bounds
 
-        with rasterio.open("/vsicurl/" + url) as src:
+        local = Path("/tmp/worldpop.tif")
+        if not local.exists():
+            log("Descargando grilla WorldPop:", url)
+            with requests.get(url, headers=UA, timeout=900, stream=True) as r:
+                r.raise_for_status()
+                with open(local, "wb") as fh:
+                    for chunk in r.iter_content(1 << 20):
+                        fh.write(chunk)
+            log("Descargado:", round(local.stat().st_size / 1e6, 1), "MB")
+        with rasterio.open(local) as src:
             win = from_bounds(*BBOX, transform=src.transform).round_offsets().round_lengths()
             arr = src.read(1, window=win).astype("float64")
             nod = src.nodata
@@ -177,25 +186,39 @@ SERVICIOS = [
 ]
 
 
+def _get(url, **kw):
+    """GET público de solo lectura. Algunos servidores del Estado publican una cadena de
+    certificados incompleta: en ese caso se reintenta sin verificación y se registra."""
+    try:
+        return requests.get(url, headers=UA, **kw)
+    except requests.exceptions.SSLError:
+        import urllib3
+        urllib3.disable_warnings()
+        log("Aviso: certificado incompleto en", url.split("/")[2], "– lectura pública sin verificación")
+        return requests.get(url, headers=UA, verify=False, **kw)
+
+
 def areas_criticas():
     feats = []
     for fuente, base in SERVICIOS:
         try:
-            r = requests.get(base + "/layers", params={"f": "json"}, headers=UA, timeout=60)
+            r = _get(base + "/layers", params={"f": "json"}, timeout=60)
             r.raise_for_status()
             capas = r.json().get("layers", [])
         except Exception as e:  # noqa: BLE001
             log(fuente, "sin catálogo de capas:", e)
             continue
         for c in capas:
+            log("  capa disponible:", fuente, c.get("id"), "|", c.get("name"), "|", c.get("type"), "|", c.get("geometryType"))
+        for c in capas:
             nombre = c.get("name", "")
             n = norm(nombre)
-            if c.get("type") != "Feature Layer" or "critic" not in n:
+            if "critic" not in n or c.get("type") not in ("Feature Layer", "Feature layer"):
                 continue
-            if c.get("geometryType") not in ("esriGeometryPolygon", "esriGeometryPoint"):
+            if c.get("geometryType") not in ("esriGeometryPolygon", "esriGeometryPoint", "esriGeometryMultipoint"):
                 continue
             try:
-                q = requests.get(f"{base}/{c['id']}/query", headers=UA, timeout=90, params={
+                q = _get(f"{base}/{c['id']}/query", timeout=90, params={
                     "geometry": ",".join(map(str, BBOX)), "geometryType": "esriGeometryEnvelope", "inSR": 4326,
                     "spatialRel": "esriSpatialRelIntersects", "outFields": "*", "returnGeometry": "true",
                     "outSR": 4326, "f": "geojson"})
