@@ -287,6 +287,40 @@ def areas_criticas():
     return feats
 
 
+# ------------------------------------------------------------ zonas críticas oficiales como sectores
+def tipo_por_peligro(txt: str) -> str:
+    t = norm(txt)
+    if "fluvial" in t or "inundacion" in t:
+        return "ribera"
+    if "flujo" in t or "huaico" in t or "huayco" in t:
+        return "quebrada"
+    return "ladera"
+
+
+def zonas_oficiales(feats, distrito):
+    """Zonas críticas del INGEMMET dentro de SJL, sin duplicados (un registro por número)."""
+    zonas = {}
+    for f in feats:
+        g = f.get("geometry") or {}
+        if g.get("type") != "Point":
+            continue
+        p = f.get("properties", {})
+        lon, lat = g["coordinates"][:2]
+        en_sjl = "lurigancho" in norm(str(p.get("DISTRITO", ""))) and "san juan" in norm(str(p.get("DISTRITO", "")))
+        if not en_sjl and not distrito.contains(Point(lon, lat)):
+            continue
+        clave = str(p.get("NUM") or f"{round(lon, 4)},{round(lat, 4)}")
+        if clave in zonas:
+            continue
+        peligro = " ".join(str(p.get("PELIGROS_G") or p.get("PELIGRO") or "").split())
+        paraje = " ".join(str(p.get("PARAJE") or p.get("NOMBRE") or f"Zona crítica {clave}").split())
+        boletin = " · ".join(x.strip() for x in str(p.get("BOLETIN") or "").splitlines() if x.strip())
+        zonas[clave] = {"id": f"ig{clave}", "num": p.get("NUM"), "nombre": paraje, "lat": round(lat, 6), "lon": round(lon, 6),
+                        "tipo": tipo_por_peligro(peligro), "peligro": peligro, "boletin": boletin, "oficial": True,
+                        "ambito": "distrito"}
+    return list(zonas.values())
+
+
 # ------------------------------------------------------------ principal
 def main(destino: str) -> int:
     cfg = fuentes.leer_json("config.json")
@@ -341,7 +375,15 @@ def main(destino: str) -> int:
             geoms.append(g.buffer(0))
         except Exception:  # noqa: BLE001
             pass
-    out["areas_criticas"]["features"] = feats
+    vistos, unicos = set(), []
+    for f in feats:
+        p = f.get("properties", {})
+        k = str(p.get("NUM")) if p.get("NUM") is not None else json.dumps(f.get("geometry"))[:80]
+        if k in vistos:
+            continue
+        vistos.add(k)
+        unicos.append(f)
+    out["areas_criticas"]["features"] = unicos
     union = unary_union(geoms) if geoms else None
     if union is not None and not union.is_empty:
         en_sjl = union.intersection(distrito)
@@ -352,7 +394,28 @@ def main(destino: str) -> int:
             out["distrito"]["edificaciones_en_areas_criticas"] = contar(pts, en_sjl)
     out["fuentes"]["areas_criticas"] = sorted({f["properties"]["fuente"] + " · " + f["properties"]["capa"] for f in feats}) or None
 
-    # Sectores
+    # Zonas críticas oficiales del INGEMMET como sectores de la plataforma
+    zo = zonas_oficiales(feats, distrito)
+    for z in zo:
+        r = radios.get(z["tipo"], 300)
+        zona = circulo(z["lon"], z["lat"], r)
+        pob = round(grilla.suma(zona) * factor) if grilla is not None else None
+        edi = contar(pts, zona) if pts is not None else None
+        # Peligro: zona crítica oficial (alto a muy alto). Vulnerabilidad aproximada por exposición.
+        z["susceptibilidad"] = 0.9 if z["tipo"] == "quebrada" else 0.85
+        z["vulnerabilidad"] = round(0.4 + 0.6 * min((pob or 0) / 6000, 1), 2)
+        z["nota"] = f"Zona crítica INGEMMET N.° {z['num']}. Peligros: {z['peligro']}." + (f" Fuente: {z['boletin']}." if z["boletin"] else "")
+        out["sectores"][z["id"]] = {"radio_m": r, "poblacion": pob, "edificaciones": edi, "en_area_critica": True}
+    out["zonas_oficiales"] = zo
+    out["distrito"]["zonas_criticas_ingemmet"] = len(zo)
+    if zo and grilla is not None:
+        u = unary_union([circulo(z["lon"], z["lat"], radios.get(z["tipo"], 300)) for z in zo]).intersection(distrito)
+        out["distrito"]["poblacion_entorno_zonas_criticas"] = round(grilla.suma(u) * factor)
+        if pts is not None:
+            out["distrito"]["edificaciones_entorno_zonas_criticas"] = contar(pts, u)
+    log("Zonas críticas oficiales en SJL:", len(zo))
+
+    # Sectores propios (respaldo)
     for s in sectores:
         r = radios.get(s["tipo"], 300)
         zona = circulo(s["lon"], s["lat"], r)

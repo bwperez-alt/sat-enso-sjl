@@ -219,10 +219,12 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
       <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Sectores</h2>
         <span><button class="btn" id="csvBtn">⬇ Descargar CSV</button> <button class="btn" id="copyBtn">Copiar</button></span></div>
       <div class="muted" id="csvMsg"></div>
+      <div style="max-height:640px;overflow:auto">
       <table>
-        <thead><tr><th>Sector</th><th>Tipo</th><th>Riesgo de referencia</th><th>Aviso máximo</th><th>Fecha</th></tr></thead>
+        <thead style="position:sticky;top:0;background:var(--panel)"><tr><th>Sector</th><th>Tipo</th><th>Riesgo de referencia</th><th>Aviso máximo</th><th>Fecha</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
+      </div>
     </div>
   </div>
 
@@ -269,7 +271,8 @@ path.pulse{animation:pulse 2.2s ease-in-out infinite}
   <div class="card">
     <details>
       <summary>Metodología, fuentes y limitaciones</summary>
-      <p><b>1. Nivel de riesgo de referencia (estático).</b> Siguiendo el enfoque del CENEPRED (riesgo = peligro × vulnerabilidad), cada sector tiene un índice de susceptibilidad y uno de vulnerabilidad entre 0 y 1. Su producto se clasifica en cuatro niveles: <b>Bajo</b> (&lt; 0,30), <b>Medio</b> (0,30–0,45), <b>Alto</b> (0,45–0,62) y <b>Muy alto</b> (≥ 0,62). <b>Los valores actuales son ilustrativos</b> y deben reemplazarse por la susceptibilidad del INGEMMET o del CENEPRED y por una vulnerabilidad calculada con exposición, fragilidad y resiliencia (dimensiones social, económica y ambiental).</p>
+      <p><b>0. Sectores.</b> Cuando está disponible, la plataforma usa como sectores las <b>zonas críticas oficiales del INGEMMET</b> dentro de San Juan de Lurigancho (servicio GEOCATMIN: nombre del paraje, tipo de peligro, coordenadas y boletín de origen). El tipo se asigna según el peligro: flujo de detritos → quebrada; caída de rocas o derrumbes → ladera; erosión o inundación fluvial → ribera. Si el servicio no responde, se usan 12 sectores de respaldo con ubicación aproximada.</p>
+      <p><b>1. Nivel de riesgo de referencia (estático).</b> Siguiendo el enfoque del CENEPRED (riesgo = peligro × vulnerabilidad), cada sector tiene un índice de susceptibilidad y uno de vulnerabilidad entre 0 y 1. Su producto se clasifica en cuatro niveles: <b>Bajo</b> (&lt; 0,30), <b>Medio</b> (0,30–0,45), <b>Alto</b> (0,45–0,62) y <b>Muy alto</b> (≥ 0,62). En las zonas oficiales, la susceptibilidad corresponde a su condición de zona crítica (0,90 en quebradas; 0,85 en el resto) y la vulnerabilidad se aproxima por exposición (población estimada en su entorno). En los sectores de respaldo, <b>los valores son ilustrativos</b>. En ambos casos deben reemplazarse por la susceptibilidad del INGEMMET o del CENEPRED y por una vulnerabilidad calculada con exposición, fragilidad y resiliencia (dimensiones social, económica y ambiental).</p>
       <p><b>2. Intensidad del detonante (dinámica, por día).</b> Se compara la precipitación en las cabeceras de las quebradas Canto Grande y Huaycoloro con tres umbrales (U1, U2, U3), conceptualmente equivalentes a los percentiles P90, P95 y P99 del SENAMHI:</p>
       <ul>
         <li>Intensidad máxima en 1 h, acumulado en 24 h y acumulado en 72 h, evaluados por separado en cada cabecera; se toma el nivel más alto.</li>
@@ -308,7 +311,8 @@ var $=function(id){return document.getElementById(id);};
 var D=DATA||{};
 var VERSION_ESPERADA=3;
 var FALLBACK_LIM={type:"Polygon",coordinates:[[[-76.93137,-11.94217],[-76.9694,-11.99493],[-76.95311,-12.02226],[-77.00954,-12.03087],[-77.01261,-12.03732],[-77.03065,-11.99639],[-77.02828,-11.96068],[-76.98795,-11.89715],[-76.94228,-11.86087],[-76.91211,-11.88927],[-76.93137,-11.94217]]]};
-var SECT=D.sectores||[{id:"jic",nombre:"Jicamarca – Alto Canto Grande",lat:-11.895,lon:-76.952,tipo:"quebrada",susceptibilidad:0.92,vulnerabilidad:0.82,ambito:"influencia",nota:""}];
+var ZO=(D.exposicion&&D.exposicion.zonas_oficiales&&D.exposicion.zonas_oficiales.length)?D.exposicion.zonas_oficiales:null;
+var SECT=ZO||D.sectores||[{id:"jic",nombre:"Jicamarca – Alto Canto Grande",lat:-11.895,lon:-76.952,tipo:"quebrada",susceptibilidad:0.92,vulnerabilidad:0.82,ambito:"influencia",nota:""}];
 var CFG=D.config||{};
 var U=CFG.umbrales||{precipitacion_1h_mm:[3,6,10],precipitacion_24h_mm:[8,15,25],precipitacion_72h_mm:[15,25,40],ipa_k:0.85,ipa_saturacion_mm:10,reduccion_umbral_24h_por_ipa:0.8,caudal_chosica_m3s:[70,100,140]};
 var CORTES=(CFG.riesgo&&CFG.riesgo.cortes)||[0.30,0.45,0.62];
@@ -429,7 +433,7 @@ function initMap(){
   ((CFG.cabeceras||[]).concat(CFG.cuenca_alta||[])).forEach(function(p){L.circleMarker([p.lat,p.lon],{radius:5,color:"#cfe3ff",weight:1.5,fillColor:"#4ea1ff",fillOpacity:1}).bindTooltip(esc(p.nombre),{className:"lbl"}).addTo(est);});
   if(CFG.punto_caudal){var pc=CFG.punto_caudal;L.circleMarker([pc.lat,pc.lon],{radius:6,color:"#fff",weight:1.5,fillColor:"#1b6fd1",fillOpacity:1}).bindTooltip(esc(pc.nombre),{className:"lbl"}).addTo(est);}
   var acr=L.layerGroup(),ac=D.exposicion&&D.exposicion.areas_criticas;
-  if(ac&&ac.features&&ac.features.length){
+  if(!ZO&&ac&&ac.features&&ac.features.length){
     L.geoJSON(ac,{style:{color:"#ff5a5a",weight:2,fillColor:"#ff5a5a",fillOpacity:.18,dashArray:"4 3"},
       pointToLayer:function(f,ll){return L.circleMarker(ll,{radius:6,color:"#fff",weight:1.5,fillColor:"#ff5a5a",fillOpacity:1});},
       onEachFeature:function(f,ly){var p=f.properties||{},h='<b>'+esc(p.capa||"Área crítica")+'</b><br><span style="color:#555">'+esc(p.fuente||"")+'</span>';
@@ -565,8 +569,8 @@ function render(){
   var s=SECT.filter(function(x){return x.id===st.sel;})[0],o=res.sect[s.id];
   $("dName").textContent=s.nombre+(s.ambito==="influencia"?" (zona de influencia)":"");$("dLvl").innerHTML=badgeA(o.max);
   var ee=expo(s),exTxt=ee&&ee.poblacion!=null?("≈ "+fN(ee.poblacion,0)+" personas"+(ee.edificaciones!=null?" · "+fN(ee.edificaciones,0)+" edificaciones":"")+" en "+ee.radio_m+" m (estimación)"):"en cálculo (actualización mensual)";
-  var acTxt=ee&&ee.en_area_critica!=null?'<span class="chip" style="'+(ee.en_area_critica?'border-color:#d03b3b;color:#ffb4b4':'')+'">Área crítica oficial: '+(ee.en_area_critica?"sí, se superpone":"no se superpone")+'</span>':"";
-  $("dChips").innerHTML='<span class="chip">Tipo: '+TIPOS[s.tipo]+'</span><span class="chip">Riesgo de referencia: '+RIESGO[o.rl].n+'</span><span class="chip">Susceptibilidad (ilustrativa): '+fN(s.susceptibilidad,2)+'</span><span class="chip">Vulnerabilidad (ilustrativa): '+fN(s.vulnerabilidad,2)+'</span><span class="chip">Expuestos: '+exTxt+'</span>'+acTxt;
+  var acTxt=s.oficial?"":ee&&ee.en_area_critica!=null?'<span class="chip" style="'+(ee.en_area_critica?'border-color:#d03b3b;color:#ffb4b4':'')+'">Área crítica oficial: '+(ee.en_area_critica?"sí, se superpone":"no se superpone")+'</span>':"";
+  $("dChips").innerHTML='<span class="chip">Tipo: '+TIPOS[s.tipo]+'</span><span class="chip">Riesgo de referencia: '+RIESGO[o.rl].n+'</span>'+(s.oficial?'<span class="chip" style="border-color:#ff5a5a;color:#ffb4b4">Zona crítica oficial INGEMMET N.° '+esc(s.num)+'</span><span class="chip">Vulnerabilidad aprox. por exposición: '+fN(s.vulnerabilidad,2)+'</span>':'<span class="chip">Susceptibilidad (ilustrativa): '+fN(s.susceptibilidad,2)+'</span><span class="chip">Vulnerabilidad (ilustrativa): '+fN(s.vulnerabilidad,2)+'</span>')+'<span class="chip">Expuestos: '+exTxt+'</span>'+acTxt;
   $("dNote").textContent=s.nota||"";
   $("strip").innerHTML=res.dias.map(function(x,i){var a=AVISO[o.av[i]];return '<div class="cell" title="'+esc(fmt(x.d)+": "+a.n+" · detonante "+DET[o.dt[i]].toLowerCase())+'" style="background:'+a.hex+';color:'+a.fg+'"><b>'+(st.mode==="proy"?fmtS(x.d):"Escenario")+'</b><span>'+a.n.replace("Aviso ","")+'</span></div>';}).join("");
   // Gráficos
