@@ -180,10 +180,42 @@ def contar(pts_arr, geom) -> int:
 
 
 # ------------------------------------------------------------ áreas críticas oficiales
-SERVICIOS = [
-    ("CENEPRED – SIGRID", "https://sigrid.cenepred.gob.pe/arcgis/rest/services/Cartografia_Peligros/MapServer"),
-    ("INGEMMET – Perú en Alerta", "https://geocatminapp.ingemmet.gob.pe/arcgis/rest/services/SERV_PERUALERTA/MapServer"),
+RAICES = [
+    ("CENEPRED – SIGRID", "https://sigrid.cenepred.gob.pe/arcgis/rest/services"),
+    ("INGEMMET – GEOCATMIN", "https://geocatmin.ingemmet.gob.pe/arcgis/rest/services"),
+    ("INGEMMET – GEOCATMIN", "https://geocatminapp.ingemmet.gob.pe/arcgis/rest/services"),
 ]
+CLAVES_SERVICIO = ("peligr", "critic", "alerta", "riesgo", "geodinam", "movimiento")
+
+
+def descubrir_servicios():
+    """Recorre el directorio ArcGIS REST (raíz + carpetas) y devuelve MapServers candidatos."""
+    vistos, out = set(), []
+    for fuente, raiz in RAICES:
+        try:
+            j = _get(raiz, params={"f": "json"}, timeout=60).json()
+        except Exception as e:  # noqa: BLE001
+            log(fuente, "directorio no disponible:", e)
+            continue
+        servicios = list(j.get("services", []))
+        for carpeta in j.get("folders", [])[:40]:
+            try:
+                jj = _get(f"{raiz}/{carpeta}", params={"f": "json"}, timeout=60).json()
+                servicios += jj.get("services", [])
+            except Exception as e:  # noqa: BLE001
+                log(fuente, "carpeta", carpeta, "falló:", e)
+        for sv in servicios:
+            nombre, tipo = sv.get("name", ""), sv.get("type", "")
+            if tipo not in ("MapServer", "FeatureServer"):
+                continue
+            if not any(k in norm(nombre) for k in CLAVES_SERVICIO):
+                continue
+            url = f"{raiz}/{nombre}/{tipo}"
+            if url not in vistos:
+                vistos.add(url)
+                out.append((fuente, url))
+    log("Servicios candidatos:", [u for _, u in out])
+    return out[:25]
 
 
 def _get(url, **kw):
@@ -200,7 +232,7 @@ def _get(url, **kw):
 
 def areas_criticas():
     feats = []
-    for fuente, base in SERVICIOS:
+    for fuente, base in descubrir_servicios():
         capas = []
         try:
             r = _get(base + "/layers", params={"f": "json"}, timeout=60)
