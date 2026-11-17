@@ -13,6 +13,12 @@ from pathlib import Path
 import fuentes
 
 
+# En GitHub Actions no hay usuario esperando: más tiempo y más reintentos
+# (los runners comparten IP y Open-Meteo responde a veces 429 o lento).
+fuentes.TIMEOUT = 30
+fuentes.REINTENTOS = 4
+
+
 def main(destino: str) -> int:
     cfg = fuentes.leer_json("config.json")
     tareas = {
