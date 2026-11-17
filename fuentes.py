@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -25,6 +26,38 @@ import requests
 TZ = "America/Lima"
 UA = {"User-Agent": "sat-enso-sjl/1.0 (+https://github.com/bwperez-alt/sat-enso-sjl)"}
 DATA_DIR = Path(__file__).parent / "data"
+
+# Tolerancia de red. La app Streamlit usa valores cortos (no debe hacer esperar al usuario);
+# actualizar_datos.py (GitHub Actions) los sube porque las IP compartidas de los runners
+# reciben a menudo 429 (Too Many Requests) o respuestas lentas de Open-Meteo.
+TIMEOUT = 12
+REINTENTOS = 1
+ESPERA_MAX = 60
+_REINTENTABLES = {429, 500, 502, 503, 504}
+
+
+def _get(url: str, **kw) -> requests.Response:
+    """GET con reintentos y espera exponencial ante 429/5xx y errores de conexión o tiempo."""
+    kw.setdefault("headers", UA)
+    kw.setdefault("timeout", TIMEOUT)
+    for intento in range(REINTENTOS + 1):
+        ultimo = intento == REINTENTOS
+        try:
+            r = requests.get(url, **kw)
+        except (requests.ConnectionError, requests.Timeout):
+            if ultimo:
+                raise
+            time.sleep(min(ESPERA_MAX, 5 * 2 ** intento))
+            continue
+        if r.status_code not in _REINTENTABLES or ultimo:
+            return r
+        espera = 5 * 2 ** intento
+        try:  # respeta Retry-After si el servidor lo indica
+            espera = max(espera, int(r.headers.get("Retry-After", 0)))
+        except ValueError:
+            pass
+        time.sleep(min(ESPERA_MAX, espera))
+    return r
 
 
 def ahora_lima() -> dt.datetime:
@@ -58,10 +91,10 @@ def _lluvia_raw(puntos: tuple) -> dict:
         "forecast_days": 16,
         "past_days": 7,
     }
-    r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, headers=UA, timeout=12)
+    r = _get("https://api.open-meteo.com/v1/forecast", params=params)
     if r.status_code == 400:  # alguna variable de contexto no disponible: se pide solo la precipitación
         params["hourly"] = "precipitation"
-        r = requests.get("https://api.open-meteo.com/v1/forecast", params=params, headers=UA, timeout=12)
+        r = _get("https://api.open-meteo.com/v1/forecast", params=params)
     r.raise_for_status()
     js = r.json()
     if isinstance(js, dict):
@@ -102,7 +135,7 @@ def _caudal_raw(lat: float, lon: float) -> dict:
         "past_days": 3,
         "forecast_days": 30,
     }
-    r = requests.get("https://flood-api.open-meteo.com/v1/flood", params=params, headers=UA, timeout=12)
+    r = _get("https://flood-api.open-meteo.com/v1/flood", params=params)
     r.raise_for_status()
     d = r.json()["daily"]
     vals = [float(v) if v is not None else None for v in d["river_discharge"]]
@@ -148,7 +181,7 @@ def _noaa_raw() -> dict:
     ultimo_error = None
     for nombre, url in fuentes:
         try:
-            r = requests.get(url, headers=UA, timeout=12)
+            r = _get(url)
             r.raise_for_status()
             filas = _parse_indice(r.text)
             if filas:
@@ -178,7 +211,7 @@ def _limite_raw() -> dict:
         "countrycodes": "pe",
         "limit": 5,
     }
-    r = requests.get("https://nominatim.openstreetmap.org/search", params=params, headers=UA, timeout=12)
+    r = _get("https://nominatim.openstreetmap.org/search", params=params)
     r.raise_for_status()
     for item in r.json():
         geo = item.get("geojson") or {}
